@@ -46,3 +46,5 @@ Thumbs.db
 .playwright-mcp/
 /page-*.png
 /*-page.png
+/frontend/src/pages/dashboard.tsx
+/frontend/src/pages/ErrorPage.tsx
