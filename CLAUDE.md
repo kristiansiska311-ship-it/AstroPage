@@ -33,7 +33,11 @@ AstroPage/
 
 State of the build: the auth slice is implemented — `/api/v1/auth/login` validates
 credentials against EduPage, stores an encrypted server-side session in Postgres,
-and issues a JWT in an HttpOnly cookie. The AI homework pipeline is not built yet.
+and issues a JWT in an HttpOnly cookie. Protected endpoints rehydrate the EduPage
+session via `get_edupage_client` in `app/api/deps.py`: dashboard summary, homework
+list, AI draft generation (`/homework/generate-ai`, cached in `homework_drafts`),
+canteen meals/ordering, and AI-prompt settings. AI drafts fall back to an offline
+template when `ANTHROPIC_API_KEY` is unset.
 
 ---
 

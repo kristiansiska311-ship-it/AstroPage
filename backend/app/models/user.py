@@ -1,7 +1,7 @@
 from datetime import UTC, datetime
 from uuid import UUID, uuid4
 
-from sqlalchemy import Column, DateTime, UniqueConstraint
+from sqlalchemy import Column, DateTime, Text, UniqueConstraint
 from sqlmodel import Field, SQLModel
 
 
@@ -19,6 +19,9 @@ class User(SQLModel, table=True):
     id: UUID = Field(default_factory=uuid4, primary_key=True)
     subdomain: str = Field(index=True, max_length=63)
     username: str = Field(max_length=255)
+    # Extra instructions the student adds to the AI assistant's system prompt.
+    # The base study-assistant constraint is always applied on top of this.
+    custom_ai_prompt: str | None = Field(default=None, sa_column=Column(Text, nullable=True))
     created_at: datetime = Field(
         default_factory=_utcnow, sa_column=Column(DateTime(timezone=True), nullable=False)
     )

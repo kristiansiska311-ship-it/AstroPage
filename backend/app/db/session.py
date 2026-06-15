@@ -21,6 +21,11 @@ async def init_db() -> None:
 
     async with engine.begin() as conn:
         await conn.run_sync(SQLModel.metadata.create_all)
+        # create_all never ALTERs existing tables; patch columns added after the
+        # first deploy until Alembic lands.
+        await conn.exec_driver_sql(
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS custom_ai_prompt TEXT"
+        )
 
 
 async def get_session() -> AsyncGenerator[AsyncSession, None]:

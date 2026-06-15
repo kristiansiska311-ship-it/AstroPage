@@ -4,6 +4,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.deps import SESSION_COOKIE_NAME as COOKIE_NAME
 from app.core.config import settings
 from app.core.rate_limit import limiter
 from app.core.security import create_access_token
@@ -15,8 +16,6 @@ from app.services.edupage_service import EduPageAuthError
 logger = logging.getLogger("app.auth")
 
 router = APIRouter(prefix="/auth", tags=["auth"])
-
-COOKIE_NAME = "astropage_session"
 
 
 @router.post("/login", response_model=LoginResponse)

@@ -2,6 +2,8 @@
 // error handling live in one place. `/api` is proxied to the backend by Vite
 // in dev (see vite.config.ts) and by the reverse proxy in production.
 
+import type { Homework } from "../data/mock";
+
 const BASE = "/api/v1";
 
 export interface ApiError {
@@ -43,6 +45,63 @@ export interface LoginResponse {
   subdomain: string;
 }
 
+// Wire shape returned by GET /homework/list (snake_case, nullable fields).
+interface HomeworkItemDTO {
+  id: string;
+  subject: string | null;
+  title: string;
+  description: string;
+  teacher: string | null;
+  assigned_at: string | null;
+  due_date: string | null;
+  is_done: boolean;
+}
+
+function toHomework(item: HomeworkItemDTO): Homework {
+  // The UI's date helpers assume non-null ISO strings; fall back gracefully
+  // when EduPage omits a due/assigned date.
+  const fallbackDate = item.due_date ?? item.assigned_at ?? new Date().toISOString();
+  return {
+    id: item.id,
+    subject: item.subject ?? "General",
+    title: item.title,
+    description: item.description,
+    teacher: item.teacher ?? "Unknown",
+    assignedAt: item.assigned_at ?? fallbackDate,
+    dueAt: item.due_date ?? fallbackDate,
+    submitted: item.is_done,
+  };
+}
+
+// ── Canteen wire shapes (snake_case, nullable fields) ───────────────────────
+
+export interface MenuOptionDTO {
+  letter: string;
+  name: string | null;
+  allergens: string | null;
+  weight: string | null;
+}
+
+export interface MealDayDTO {
+  date: string; // "YYYY-MM-DD"
+  open: boolean;
+  title: string | null;
+  options: MenuOptionDTO[];
+  /** Letter of the currently ordered menu, null when signed off / not ordered. */
+  ordered_meal: string | null;
+  can_be_changed_until: string | null;
+}
+
+export interface OrderResponseDTO {
+  date: string;
+  ordered_meal: string | null;
+}
+
+export interface BulkSignupResponseDTO {
+  updated_days: number;
+  skipped_days: number;
+}
+
 export const api = {
   login: (payload: LoginPayload) =>
     request<LoginResponse>("/auth/login", {
@@ -50,4 +109,20 @@ export const api = {
       body: JSON.stringify(payload),
     }),
   logout: () => request<void>("/auth/logout", { method: "POST" }),
+  listHomework: async (): Promise<Homework[]> => {
+    const items = await request<HomeworkItemDTO[]>("/homework/list");
+    return items.map(toHomework);
+  },
+  listMeals: (weeks = 3) => request<MealDayDTO[]>(`/canteen/meals?weeks=${weeks}`),
+  // `choice` is a menu letter ("A", "B", …), or null to sign off the meal.
+  orderMeal: (date: string, choice: string | null) =>
+    request<OrderResponseDTO>("/canteen/order", {
+      method: "POST",
+      body: JSON.stringify({ date, choice }),
+    }),
+  bulkSignup: (daysCount: number, preferredChoice: string) =>
+    request<BulkSignupResponseDTO>("/canteen/bulk-signup", {
+      method: "POST",
+      body: JSON.stringify({ days_count: daysCount, preferred_choice: preferredChoice }),
+    }),
 };
