@@ -9,13 +9,25 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.homework_draft import HomeworkDraft
 from app.models.user import User
 from app.services import ai_service, edupage_service
-from app.services.edupage_service import EduPageDataError, HomeworkAssignment
+from app.services.edupage_service import EduPageDataError, HomeworkAssignment, HomeworkAttachment
 
 logger = logging.getLogger("app.homework")
 
 
 async def list_assignments(edupage: Edupage) -> list[HomeworkAssignment]:
     return await edupage_service.fetch_homework(edupage)
+
+
+async def list_attachments(edupage: Edupage, assignment_id: str) -> list[HomeworkAttachment]:
+    """Attachments for one assignment, resolved by id from the student's own
+    timeline so a client-supplied `superid` is never trusted."""
+    assignments = await edupage_service.fetch_homework(edupage)
+    assignment = next((a for a in assignments if a.id == assignment_id), None)
+    if assignment is None:
+        raise EduPageDataError("not_found", "That assignment was not found on EduPage.")
+    if not assignment.superid:
+        return []
+    return await edupage_service.fetch_homework_attachments(edupage, assignment.superid)
 
 
 async def get_cached_draft(

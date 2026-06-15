@@ -55,6 +55,14 @@ interface HomeworkItemDTO {
   assigned_at: string | null;
   due_date: string | null;
   is_done: boolean;
+  has_attachments: boolean;
+}
+
+export interface HomeworkAttachment {
+  name: string;
+  url: string;
+  type: string | null;
+  extension: string | null;
 }
 
 function toHomework(item: HomeworkItemDTO): Homework {
@@ -70,6 +78,7 @@ function toHomework(item: HomeworkItemDTO): Homework {
     assignedAt: item.assigned_at ?? fallbackDate,
     dueAt: item.due_date ?? fallbackDate,
     submitted: item.is_done,
+    hasAttachments: item.has_attachments,
   };
 }
 
@@ -113,6 +122,8 @@ export const api = {
     const items = await request<HomeworkItemDTO[]>("/homework/list");
     return items.map(toHomework);
   },
+  listHomeworkAttachments: (id: string) =>
+    request<HomeworkAttachment[]>(`/homework/${encodeURIComponent(id)}/attachments`),
   listMeals: (weeks = 3) => request<MealDayDTO[]>(`/canteen/meals?weeks=${weeks}`),
   // `choice` is a menu letter ("A", "B", …), or null to sign off the meal.
   orderMeal: (date: string, choice: string | null) =>

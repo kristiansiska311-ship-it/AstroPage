@@ -14,6 +14,17 @@ class HomeworkItem(BaseModel):
     assigned_at: datetime | None
     due_date: datetime | None
     is_done: bool
+    # True when this assignment links an e-test carrying downloadable files.
+    has_attachments: bool = False
+
+
+class HomeworkAttachment(BaseModel):
+    """A file attached to an assignment's e-test cards."""
+
+    name: str
+    url: str
+    type: str | None = None
+    extension: str | None = None
 
 
 class GenerateAiRequest(BaseModel):

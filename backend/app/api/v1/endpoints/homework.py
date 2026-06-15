@@ -6,7 +6,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import AuthContext, get_auth_context, get_edupage_client
 from app.db.session import get_session
-from app.schemas.homework import DraftResponse, GenerateAiRequest, HomeworkItem
+from app.schemas.homework import (
+    DraftResponse,
+    GenerateAiRequest,
+    HomeworkAttachment,
+    HomeworkItem,
+)
 from app.services import homework_service
 from app.services.ai_service import AiUnavailableError
 from app.services.edupage_service import EduPageDataError
@@ -33,8 +38,28 @@ async def list_homework(
             assigned_at=a.assigned_at,
             due_date=a.due_date,
             is_done=a.is_done,
+            has_attachments=a.has_attachments,
         )
         for a in assignments
+    ]
+
+
+@router.get("/{assignment_id}/attachments", response_model=list[HomeworkAttachment])
+async def list_attachments(
+    assignment_id: str,
+    edupage: Annotated[Edupage, Depends(get_edupage_client)],
+) -> list[HomeworkAttachment]:
+    """Files attached to an assignment's linked e-test (empty when none)."""
+    try:
+        attachments = await homework_service.list_attachments(edupage, assignment_id)
+    except EduPageDataError as exc:
+        code = (
+            status.HTTP_404_NOT_FOUND if exc.reason == "not_found" else status.HTTP_502_BAD_GATEWAY
+        )
+        raise HTTPException(status_code=code, detail=exc.message)
+    return [
+        HomeworkAttachment(name=a.name, url=a.url, type=a.type, extension=a.extension)
+        for a in attachments
     ]
 
 

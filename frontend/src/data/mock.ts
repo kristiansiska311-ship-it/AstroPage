@@ -51,6 +51,8 @@ export interface Homework {
   assignedAt: string;
   dueAt: string;
   submitted: boolean;
+  /** True when the assignment links an e-test carrying downloadable files. */
+  hasAttachments?: boolean;
 }
 
 export function getHomeworkStatus(hw: Homework): HomeworkStatus {

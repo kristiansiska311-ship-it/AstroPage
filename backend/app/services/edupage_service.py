@@ -5,7 +5,10 @@ it in a worker thread via `asyncio.to_thread` to avoid stalling the event loop.
 """
 
 import asyncio
+import base64
+import json
 import logging
+import urllib.parse
 from dataclasses import dataclass
 from datetime import date, datetime
 
@@ -195,6 +198,18 @@ class HomeworkAssignment:
     assigned_at: datetime | None
     due_date: datetime | None
     is_done: bool
+    # Homework whose attachments live in a linked e-test rather than the
+    # timeline event. `superid` addresses that e-test; kept server-side only.
+    has_attachments: bool = False
+    superid: str | None = None
+
+
+@dataclass
+class HomeworkAttachment:
+    name: str
+    url: str
+    type: str | None
+    extension: str | None
 
 
 def _parse_due_date(data: dict) -> datetime | None:
@@ -232,6 +247,12 @@ def _homework_blocking(edupage: Edupage) -> list[HomeworkAssignment]:
             event.author if isinstance(event.author, str) else getattr(event.author, "name", None)
         )
 
+        # Homework that links an e-test carries the attachments inside that
+        # e-test (keyed by `superid`), not on the timeline event itself.
+        superid = data.get("superid")
+        superid = str(superid) if superid else None
+        has_etest = bool(data.get("etestCards") or data.get("etestcards"))
+
         assignments.append(
             HomeworkAssignment(
                 id=str(event.event_id),
@@ -242,6 +263,8 @@ def _homework_blocking(edupage: Edupage) -> list[HomeworkAssignment]:
                 assigned_at=event.timestamp,
                 due_date=_parse_due_date(data),
                 is_done=event.is_done,
+                has_attachments=has_etest and superid is not None,
+                superid=superid,
             )
         )
     return assignments
@@ -253,6 +276,89 @@ async def fetch_homework(edupage: Edupage) -> list[HomeworkAssignment]:
     except Exception as exc:
         logger.warning("homework fetch failed: err=%s", type(exc).__name__)
         raise EduPageDataError("homework_failed", "Could not load homework from EduPage.")
+
+
+# ── E-test attachments ────────────────────────────────────────────────────────
+# Homework that links an e-test stores its files inside the e-test material,
+# reachable only via the EtestCreator endpoint — not on the timeline event.
+
+
+def _edu_encode_body(data: dict[str, str]) -> str:
+    """EduPage expects the POST body as eqap=<urlencode(base64(querystring))>&eqaz=0."""
+    query = urllib.parse.urlencode(data)
+    b64 = base64.b64encode(query.encode("utf-8")).decode("ascii")
+    return f"eqap={urllib.parse.quote(b64)}&eqaz=0"
+
+
+def _collect_files(node: object, subdomain: str, out: list[HomeworkAttachment]) -> None:
+    """Recursively pull every {name, src} file out of e-test card widgets
+    (FileETestWidget / ImageETestWidget store them under props.files[])."""
+    if isinstance(node, dict):
+        props = node.get("props")
+        files = props.get("files") if isinstance(props, dict) else None
+        if isinstance(files, list):
+            for f in files:
+                if isinstance(f, dict) and f.get("src"):
+                    src = str(f["src"])
+                    out.append(
+                        HomeworkAttachment(
+                            name=f.get("name") or src.rsplit("/", 1)[-1],
+                            url=f"https://{subdomain}.edupage.org{src}",
+                            type=f.get("type"),
+                            extension=f.get("extension"),
+                        )
+                    )
+        for value in node.values():
+            _collect_files(value, subdomain, out)
+    elif isinstance(node, list):
+        for value in node:
+            _collect_files(value, subdomain, out)
+
+
+def _etest_files_blocking(edupage: Edupage, superid: str) -> list[HomeworkAttachment]:
+    url = (
+        f"https://{edupage.subdomain}.edupage.org/elearning/?cmd=EtestCreator&akcia=getResultsData"
+    )
+    headers = {
+        "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+        "X-Requested-With": "XMLHttpRequest",
+        "Referer": f"https://{edupage.subdomain}.edupage.org/",
+    }
+    resp = edupage.session.post(
+        url, data=_edu_encode_body({"superid": str(superid)}), headers=headers
+    )
+    resp.raise_for_status()
+    cards = resp.json().get("materialData", {}).get("cardsData", {})
+
+    found: list[HomeworkAttachment] = []
+    for card in cards.values():
+        content = card.get("content")
+        if isinstance(content, str):
+            try:
+                content = json.loads(content)
+            except json.JSONDecodeError:
+                continue
+        _collect_files(content, edupage.subdomain, found)
+
+    # De-duplicate by url, preserving order.
+    seen: set[str] = set()
+    unique: list[HomeworkAttachment] = []
+    for f in found:
+        if f.url not in seen:
+            seen.add(f.url)
+            unique.append(f)
+    return unique
+
+
+async def fetch_homework_attachments(edupage: Edupage, superid: str) -> list[HomeworkAttachment]:
+    """Files attached to the e-test cards of the homework addressed by `superid`."""
+    try:
+        return await asyncio.to_thread(_etest_files_blocking, edupage, superid)
+    except Exception as exc:
+        logger.warning("etest attachments fetch failed: err=%s", type(exc).__name__)
+        raise EduPageDataError(
+            "attachments_failed", "Could not load homework attachments from EduPage."
+        )
 
 
 @dataclass

@@ -2,7 +2,9 @@ import { useEffect, useMemo, useState } from "react";
 import {
   CalendarClock,
   CheckCircle2,
+  Download,
   LoaderCircle,
+  Paperclip,
   Search,
   Sparkles,
   X,
@@ -15,7 +17,7 @@ import {
   type Homework,
   type HomeworkStatus,
 } from "../data/mock";
-import { api } from "../api/client";
+import { api, type HomeworkAttachment } from "../api/client";
 
 type StatusFilter = "all" | HomeworkStatus;
 
@@ -201,6 +203,7 @@ export default function HomeworkPage() {
 
       {selected && (
         <DetailDrawer
+          key={selected.id}
           homework={selected}
           ai={ai}
           onRunAi={() => runAi(selected)}
@@ -211,6 +214,7 @@ export default function HomeworkPage() {
     </div>
   );
 }
+
 
 interface DrawerProps {
   homework: Homework;
@@ -224,6 +228,12 @@ function DetailDrawer({ homework, ai, onRunAi, onEditDraft, onClose }: DrawerPro
   const status = getHomeworkStatus(homework);
   const wide = ai.phase === "success";
 
+  const [attachments, setAttachments] = useState<HomeworkAttachment[]>([]);
+  // Start in the loading state when we know a fetch is coming (drawer is keyed
+  // by homework id, so this initialises fresh on each open).
+  const [attLoading, setAttLoading] = useState(Boolean(homework.hasAttachments));
+  const [attError, setAttError] = useState<string | null>(null);
+
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (e.key === "Escape") onClose();
@@ -231,6 +241,27 @@ function DetailDrawer({ homework, ai, onRunAi, onEditDraft, onClose }: DrawerPro
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
+
+  // Attachments live in a linked e-test and are fetched lazily on open. The
+  // drawer is keyed by homework id at the call site, so this runs once per open.
+  useEffect(() => {
+    if (!homework.hasAttachments) return;
+    let cancelled = false;
+    api
+      .listHomeworkAttachments(homework.id)
+      .then((files) => {
+        if (!cancelled) setAttachments(files);
+      })
+      .catch((err: { detail?: string }) => {
+        if (!cancelled) setAttError(err?.detail ?? "Could not load attachments.");
+      })
+      .finally(() => {
+        if (!cancelled) setAttLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [homework.id, homework.hasAttachments]);
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end" role="dialog" aria-modal="true" aria-label={homework.title}>
@@ -279,6 +310,43 @@ function DetailDrawer({ homework, ai, onRunAi, onEditDraft, onClose }: DrawerPro
               <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-slate-400">
                 {homework.description}
               </p>
+
+              {homework.hasAttachments && (
+                <div className="mt-6">
+                  <h3 className="flex items-center gap-1.5 text-sm font-semibold text-slate-300">
+                    <Paperclip className="size-4" aria-hidden />
+                    Attachments
+                  </h3>
+                  {attLoading ? (
+                    <div className="mt-2 h-10 animate-pulse rounded-lg bg-slate-800" aria-hidden />
+                  ) : attError ? (
+                    <p className="mt-2 text-sm text-red-300">{attError}</p>
+                  ) : attachments.length === 0 ? (
+                    <p className="mt-2 text-sm text-slate-500">No files attached.</p>
+                  ) : (
+                    <ul className="mt-2 space-y-2">
+                      {attachments.map((f) => (
+                        <li key={f.url}>
+                          <a
+                            href={f.url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="flex items-center gap-2.5 rounded-lg border border-slate-800 bg-slate-900/60 px-3 py-2 text-sm text-slate-200 transition-colors duration-200 hover:border-violet-500/50 hover:bg-slate-900"
+                          >
+                            <Download className="size-4 shrink-0 text-violet-300" aria-hidden />
+                            <span className="min-w-0 flex-1 truncate">{f.name}</span>
+                            {f.extension && (
+                              <span className="shrink-0 text-xs font-medium uppercase text-slate-500">
+                                {f.extension}
+                              </span>
+                            )}
+                          </a>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              )}
 
               <button
                 type="button"
