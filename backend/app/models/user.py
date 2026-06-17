@@ -44,4 +44,3 @@ class Session(SQLModel, table=True):
     )
     expires_at: datetime = Field(sa_column=Column(DateTime(timezone=True), nullable=False))
     revoked: bool = Field(default=False)
-
