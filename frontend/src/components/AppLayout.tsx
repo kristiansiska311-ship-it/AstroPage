@@ -1,11 +1,12 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
-import { Home, BookOpen, UtensilsCrossed, UserCog, LogOut, Rocket } from "lucide-react";
+import { Home, BookOpen, GraduationCap, UtensilsCrossed, UserCog, LogOut, Rocket } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 
 const NAV_ITEMS: { to: string; label: string; icon: LucideIcon; end?: boolean }[] = [
   { to: "/", label: "Home", icon: Home, end: true },
   { to: "/homework", label: "Homework", icon: BookOpen },
+  { to: "/grades", label: "Grades", icon: GraduationCap },
   { to: "/canteen", label: "Canteen", icon: UtensilsCrossed },
 ];
 
