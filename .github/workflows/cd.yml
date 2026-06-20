@@ -51,10 +51,11 @@ jobs:
 
       - name: Wait for backend to be healthy
         run: |
-          # Backend has no host port — check health from inside the container.
+          # Use Python (always available in the container) instead of curl.
           for i in $(seq 1 30); do
             if docker compose -f "$DEPLOY_DIR/docker-compose.yml" exec -T backend \
-                curl -fsS http://localhost:8000/health >/dev/null 2>&1; then
+                python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')" \
+                >/dev/null 2>&1; then
               echo "backend is up after $((i * 2))s"; exit 0
             fi
             sleep 2
@@ -65,12 +66,10 @@ jobs:
 
       - name: Verify HTTPS endpoint is reachable
         run: |
-          # Give Caddy a moment to acquire/present the cert after a fresh deploy.
-          sleep 5
           if curl -fsS https://astropage.onboard.academy/api/health >/dev/null 2>&1; then
             echo "HTTPS endpoint is up"
           else
-            echo "Warning: HTTPS endpoint not yet reachable (cert may still be provisioning)"
+            echo "Warning: HTTPS endpoint not yet reachable"
           fi
 
       - name: Prune dangling images
