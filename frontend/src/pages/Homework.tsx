@@ -25,10 +25,10 @@ const FILTERS: { id: StatusFilter; labelKey: string }[] = [
 type StatusStyle = { bg: string; border: string; color: string; labelKey: string };
 
 const STATUS_STYLES: Record<HomeworkStatus, StatusStyle> = {
-  done:       { bg: "rgba(50,90,60,0.20)",  border: "rgba(50,90,60,0.35)",  color: "#88c8a0", labelKey: "homework.statusDone" },
-  overdue:    { bg: "rgba(90,40,40,0.20)",  border: "rgba(90,40,40,0.35)",  color: "#c88888", labelKey: "homework.statusOverdue" },
-  "due-soon": { bg: "rgba(110,78,20,0.20)", border: "rgba(110,78,20,0.35)", color: "#d4a85a", labelKey: "homework.statusDueSoon" },
-  pending:    { bg: "rgba(30,54,84,0.20)",  border: "rgba(30,54,84,0.35)",  color: "#7ab0d4", labelKey: "homework.statusPending" },
+  done:       { bg: "rgba(22,163,74,0.08)",  border: "rgba(22,163,74,0.25)",  color: "#16A34A", labelKey: "homework.statusDone" },
+  overdue:    { bg: "rgba(220,38,38,0.08)",  border: "rgba(220,38,38,0.25)",  color: "#DC2626", labelKey: "homework.statusOverdue" },
+  "due-soon": { bg: "rgba(180,83,9,0.08)",   border: "rgba(180,83,9,0.25)",   color: "#B45309", labelKey: "homework.statusDueSoon" },
+  pending:    { bg: "rgba(29,78,216,0.08)",  border: "rgba(29,78,216,0.20)",  color: "#1D4ED8", labelKey: "homework.statusPending" },
 };
 
 type AiState =
@@ -44,7 +44,6 @@ function fmtDue(iso: string, locale: string): string {
 export default function HomeworkPage() {
   const { t } = useT();
   const isMobile = useIsMobile();
-  // Cached across tab switches; auto-refreshes when stale, plus a manual button.
   const { data, loading, refreshing, error, lastUpdated, refresh, mutate } =
     useCachedResource<Homework[]>(HOMEWORK_CACHE_KEY, api.listHomework, {
       errorFallback: t("homework.loadError"),
@@ -84,8 +83,6 @@ export default function HomeworkPage() {
   async function runAi(hw: Homework) {
     setAi({ phase: "loading" });
     try {
-      // Backend (Gemini) pulls in the assignment's attachments and the
-      // student's custom instructions; we only hand it the assignment id.
       const result = await api.generateAiDraft(hw.id);
       setAi({ phase: "success", draft: result.draft });
     } catch (err) {
@@ -95,7 +92,6 @@ export default function HomeworkPage() {
 
   async function toggleDone(hw: Homework, done: boolean) {
     const apply = (submitted: boolean) => {
-      // `mutate` updates both the on-screen list and the cache in one step.
       mutate((list) => (list ?? []).map((h) => (h.id === hw.id ? { ...h, submitted } : h)));
       setSelected((cur) => (cur?.id === hw.id ? { ...cur, submitted } : cur));
     };
@@ -124,11 +120,11 @@ export default function HomeworkPage() {
         <div>
           <div
             style={{
-              fontFamily: "'JetBrains Mono', monospace",
-              fontSize: 9,
-              letterSpacing: "0.18em",
+              fontFamily: "'DM Mono', monospace",
+              fontSize: 10,
+              letterSpacing: "0.14em",
               textTransform: "uppercase",
-              color: "rgba(176,141,87,0.5)",
+              color: "#CC2B2B",
               marginBottom: 6,
             }}
           >
@@ -136,10 +132,10 @@ export default function HomeworkPage() {
           </div>
           <div
             style={{
-              fontFamily: "'Cormorant Garamond', serif",
+              fontFamily: "'Instrument Serif', serif",
               fontSize: 34,
-              fontWeight: 500,
-              color: "#E8DCC7",
+              fontWeight: 400,
+              color: "#131313",
               letterSpacing: "-0.01em",
             }}
           >
@@ -157,16 +153,16 @@ export default function HomeworkPage() {
             display: "flex",
             alignItems: "center",
             gap: 8,
-            background: "#161208",
-            border: "1px solid rgba(176,141,87,0.14)",
-            borderRadius: 7,
+            background: "#FFFFFF",
+            border: "1px solid #E5E3DC",
+            borderRadius: 5,
             padding: "8px 12px",
             flexShrink: 0,
           }}
         >
           <svg width="11" height="11" viewBox="0 0 14 14" fill="none">
-            <circle cx="6" cy="6" r="4" stroke="rgba(176,141,87,0.45)" strokeWidth="1.3" />
-            <path d="M10 10l3 3" stroke="rgba(176,141,87,0.45)" strokeWidth="1.3" strokeLinecap="round" />
+            <circle cx="6" cy="6" r="4" stroke="rgba(19,19,19,0.35)" strokeWidth="1.3" />
+            <path d="M10 10l3 3" stroke="rgba(19,19,19,0.35)" strokeWidth="1.3" strokeLinecap="round" />
           </svg>
           <input
             type="search"
@@ -177,9 +173,10 @@ export default function HomeworkPage() {
               background: "transparent",
               border: "none",
               outline: "none",
+              boxShadow: "none",
               fontFamily: "'Inter', sans-serif",
               fontSize: 12,
-              color: "rgba(232,220,199,0.6)",
+              color: "rgba(19,19,19,0.65)",
               width: 160,
               padding: 0,
             }}
@@ -196,15 +193,15 @@ export default function HomeworkPage() {
               onClick={() => setFilter(f.id)}
               style={{
                 padding: "7px 12px",
-                borderRadius: 6,
-                border: `1px solid ${active ? "rgba(176,141,87,0.32)" : "rgba(176,141,87,0.12)"}`,
-                background: active ? "rgba(176,141,87,0.12)" : "transparent",
+                borderRadius: 5,
+                border: `1px solid ${active ? "rgba(204,43,43,0.30)" : "#E5E3DC"}`,
+                background: active ? "rgba(204,43,43,0.07)" : "#FFFFFF",
                 cursor: "pointer",
-                fontFamily: "'JetBrains Mono', monospace",
+                fontFamily: "'DM Mono', monospace",
                 fontSize: 9,
-                letterSpacing: "0.12em",
+                letterSpacing: "0.10em",
                 textTransform: "uppercase",
-                color: active ? "#B08D57" : "rgba(232,220,199,0.42)",
+                color: active ? "#CC2B2B" : "rgba(19,19,19,0.45)",
                 transition: "all 0.15s",
               }}
             >
@@ -218,16 +215,15 @@ export default function HomeworkPage() {
       {error ? (
         <ErrorPanel message={error} />
       ) : loading ? (
-        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 12 }}>
+        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 10 }}>
           {Array.from({ length: 4 }, (_, i) => (
             <div
               key={i}
               style={{
                 height: 144,
-                background: "rgba(176,141,87,0.06)",
-                borderRadius: 10,
-                border: "1px solid rgba(176,141,87,0.08)",
-                animation: "none",
+                background: "rgba(0,0,0,0.04)",
+                borderRadius: 8,
+                border: "1px solid #E5E3DC",
                 opacity: 0.6,
               }}
             />
@@ -236,26 +232,26 @@ export default function HomeworkPage() {
       ) : visible.length === 0 ? (
         <div
           style={{
-            border: "1px dashed rgba(176,141,87,0.18)",
-            borderRadius: 10,
+            border: "1px dashed #E5E3DC",
+            borderRadius: 8,
             padding: "64px 24px",
             textAlign: "center",
           }}
         >
           <p
             style={{
-              fontFamily: "'JetBrains Mono', monospace",
+              fontFamily: "'DM Mono', monospace",
               fontSize: 9,
-              letterSpacing: "0.14em",
+              letterSpacing: "0.12em",
               textTransform: "uppercase",
-              color: "rgba(232,220,199,0.28)",
+              color: "rgba(19,19,19,0.28)",
             }}
           >
             {t("homework.noMatch")}
           </p>
         </div>
       ) : (
-        <ul style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 12, listStyle: "none", padding: 0, margin: 0 }}>
+        <ul style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 10, listStyle: "none", padding: 0, margin: 0 }}>
           {visible.map((hw) => {
             const st = STATUS_STYLES[getHomeworkStatus(hw)];
             return (
@@ -291,24 +287,24 @@ export default function HomeworkPage() {
             left: "50%",
             transform: "translateX(-50%)",
             zIndex: 200,
-            background: "#161208",
-            border: "1px solid rgba(176,141,87,0.28)",
-            borderRadius: 8,
+            background: "#FFFFFF",
+            border: "1px solid rgba(220,38,38,0.25)",
+            borderRadius: 6,
             padding: "11px 18px",
-            boxShadow: "0 8px 24px rgba(0,0,0,0.5)",
+            boxShadow: "0 8px 24px rgba(0,0,0,0.10)",
             whiteSpace: "nowrap",
             display: "flex",
             alignItems: "center",
             gap: 10,
           }}
         >
-          <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, letterSpacing: "0.12em", color: "#c88888" }}>
+          <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, letterSpacing: "0.10em", color: "#DC2626" }}>
             {toast}
           </span>
           <button
             type="button"
             onClick={() => setToast(null)}
-            style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(232,220,199,0.4)", padding: 0 }}
+            style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(19,19,19,0.35)", padding: 0 }}
           >
             ✕
           </button>
@@ -329,9 +325,9 @@ function HomeworkCard({ hw, st, onClick }: { hw: Homework; st: StatusStyle; onCl
       onMouseLeave={() => setHovered(false)}
       style={{
         width: "100%",
-        background: hovered ? "#1c1710" : "#161208",
-        border: `1px solid ${hovered ? "rgba(176,141,87,0.3)" : "rgba(176,141,87,0.14)"}`,
-        borderRadius: 10,
+        background: hovered ? "#F7F5EF" : "#FFFFFF",
+        border: `1px solid ${hovered ? "rgba(0,0,0,0.15)" : "#E5E3DC"}`,
+        borderRadius: 8,
         padding: 18,
         cursor: "pointer",
         textAlign: "left",
@@ -339,17 +335,17 @@ function HomeworkCard({ hw, st, onClick }: { hw: Homework; st: StatusStyle; onCl
       }}
     >
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 10, gap: 8 }}>
-        <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, letterSpacing: "0.13em", textTransform: "uppercase", color: "#B08D57" }}>
+        <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase", color: "#CC2B2B" }}>
           {hw.subject}
         </div>
         <span
           style={{
-            fontFamily: "'JetBrains Mono', monospace",
+            fontFamily: "'DM Mono', monospace",
             fontSize: 8,
-            letterSpacing: "0.1em",
+            letterSpacing: "0.08em",
             textTransform: "uppercase",
             padding: "3px 7px",
-            borderRadius: 4,
+            borderRadius: 3,
             background: st.bg,
             color: st.color,
             border: `1px solid ${st.border}`,
@@ -365,7 +361,7 @@ function HomeworkCard({ hw, st, onClick }: { hw: Homework; st: StatusStyle; onCl
           fontFamily: "'Inter', sans-serif",
           fontSize: 14,
           fontWeight: 500,
-          color: "#E8DCC7",
+          color: "#131313",
           marginBottom: 6,
           lineHeight: 1.3,
           display: "-webkit-box",
@@ -380,7 +376,7 @@ function HomeworkCard({ hw, st, onClick }: { hw: Homework; st: StatusStyle; onCl
         style={{
           fontFamily: "'Inter', sans-serif",
           fontSize: 12,
-          color: "rgba(232,220,199,0.42)",
+          color: "rgba(19,19,19,0.45)",
           lineHeight: 1.5,
           overflow: "hidden",
           display: "-webkit-box",
@@ -394,14 +390,14 @@ function HomeworkCard({ hw, st, onClick }: { hw: Homework; st: StatusStyle; onCl
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
           <svg width="10" height="10" viewBox="0 0 14 14" fill="none">
-            <rect x="1" y="2" width="12" height="11" rx="1" stroke="rgba(232,220,199,0.28)" strokeWidth="1.2" />
-            <path d="M4 1v2M10 1v2M1 5h12" stroke="rgba(232,220,199,0.28)" strokeWidth="1.2" strokeLinecap="round" />
+            <rect x="1" y="2" width="12" height="11" rx="1" stroke="rgba(19,19,19,0.28)" strokeWidth="1.2" />
+            <path d="M4 1v2M10 1v2M1 5h12" stroke="rgba(19,19,19,0.28)" strokeWidth="1.2" strokeLinecap="round" />
           </svg>
-          <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, color: "rgba(232,220,199,0.35)", letterSpacing: "0.05em" }}>
+          <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 9, color: "rgba(19,19,19,0.38)", letterSpacing: "0.04em" }}>
             {fmtDue(hw.dueAt, locale)}
           </span>
         </div>
-        <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 11, color: "rgba(232,220,199,0.28)" }}>
+        <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 11, color: "rgba(19,19,19,0.32)" }}>
           {hw.teacher}
         </span>
       </div>
@@ -452,44 +448,44 @@ function DetailDrawer({ homework, ai, doneBusy, onToggleDone, onRunAi, onEditDra
         style={{
           position: "fixed",
           inset: 0,
-          background: "rgba(0,0,0,0.42)",
+          background: "rgba(0,0,0,0.30)",
           zIndex: 49,
-          transition: "opacity 0.32s",
+          transition: "opacity 0.28s",
         }}
       />
 
-      {/* Drawer */}
+      {/* Drawer — dark reading panel */}
       <div
         role="dialog"
         aria-modal="true"
         aria-label={homework.title}
         style={{
           position: "fixed",
-          top: isMobile ? 0 : 0,
+          top: 0,
           right: 0,
           bottom: 0,
           width: isMobile ? "100%" : 460,
-          background: "#120f0b",
-          borderLeft: isMobile ? "none" : "1px solid rgba(176,141,87,0.18)",
-          borderTop: isMobile ? "1px solid rgba(176,141,87,0.18)" : "none",
-          boxShadow: "-24px 0 60px rgba(0,0,0,0.5)",
+          background: "#111111",
+          borderLeft: isMobile ? "none" : "1px solid rgba(255,255,255,0.07)",
+          borderTop: isMobile ? "1px solid rgba(255,255,255,0.07)" : "none",
+          boxShadow: "-16px 0 48px rgba(0,0,0,0.30)",
           zIndex: 50,
           overflowY: "auto",
           transform: "translateX(0)",
-          transition: "transform 0.32s cubic-bezier(0.2,0.7,0.15,1)",
+          transition: "transform 0.28s cubic-bezier(0.2,0.7,0.15,1)",
         }}
       >
         <div style={{ padding: "24px 24px 48px" }}>
           {/* Header */}
           <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 16 }}>
             <div style={{ paddingRight: 16, minWidth: 0 }}>
-              <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, letterSpacing: "0.14em", textTransform: "uppercase", color: "#B08D57", marginBottom: 5 }}>
+              <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase", color: "#CC2B2B", marginBottom: 5 }}>
                 {homework.subject}
               </div>
-              <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 22, fontWeight: 500, color: "#E8DCC7", lineHeight: 1.2 }}>
+              <div style={{ fontFamily: "'Instrument Serif', serif", fontSize: 22, fontWeight: 400, color: "rgba(255,255,255,0.90)", lineHeight: 1.2 }}>
                 {homework.title}
               </div>
-              <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 11, color: "rgba(232,220,199,0.35)", marginTop: 5 }}>
+              <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 11, color: "rgba(255,255,255,0.35)", marginTop: 5 }}>
                 {homework.teacher} · {t("homework.due", { date: fmtDue(homework.dueAt, locale) })}
               </div>
             </div>
@@ -503,15 +499,15 @@ function DetailDrawer({ homework, ai, doneBusy, onToggleDone, onRunAi, onEditDra
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                border: "1px solid rgba(176,141,87,0.18)",
-                borderRadius: 5,
+                border: "1px solid rgba(255,255,255,0.12)",
+                borderRadius: 4,
                 cursor: "pointer",
                 background: "transparent",
                 flexShrink: 0,
               }}
             >
               <svg width="9" height="9" viewBox="0 0 10 10" fill="none">
-                <path d="M1 1l8 8M9 1L1 9" stroke="rgba(232,220,199,0.45)" strokeWidth="1.4" strokeLinecap="round" />
+                <path d="M1 1l8 8M9 1L1 9" stroke="rgba(255,255,255,0.45)" strokeWidth="1.4" strokeLinecap="round" />
               </svg>
             </button>
           </div>
@@ -519,12 +515,12 @@ function DetailDrawer({ homework, ai, doneBusy, onToggleDone, onRunAi, onEditDra
           {/* Status badge */}
           <span
             style={{
-              fontFamily: "'JetBrains Mono', monospace",
+              fontFamily: "'DM Mono', monospace",
               fontSize: 8,
-              letterSpacing: "0.12em",
+              letterSpacing: "0.10em",
               textTransform: "uppercase",
               padding: "3px 8px",
-              borderRadius: 4,
+              borderRadius: 3,
               background: st.bg,
               color: st.color,
               border: `1px solid ${st.border}`,
@@ -533,7 +529,7 @@ function DetailDrawer({ homework, ai, doneBusy, onToggleDone, onRunAi, onEditDra
             {t(st.labelKey)}
           </span>
 
-          <div style={{ height: 1, background: "rgba(176,141,87,0.1)", margin: "16px 0" }} />
+          <div style={{ height: 1, background: "rgba(255,255,255,0.07)", margin: "16px 0" }} />
 
           {/* Mark as done */}
           <button
@@ -544,16 +540,16 @@ function DetailDrawer({ homework, ai, doneBusy, onToggleDone, onRunAi, onEditDra
             style={{
               width: "100%",
               padding: 11,
-              borderRadius: 8,
-              border: `1px solid ${homework.submitted ? "rgba(50,90,60,0.35)" : "rgba(176,141,87,0.25)"}`,
-              background: homework.submitted ? "rgba(50,90,60,0.18)" : "rgba(176,141,87,0.12)",
+              borderRadius: 6,
+              border: `1px solid ${homework.submitted ? "rgba(22,163,74,0.35)" : "rgba(255,255,255,0.12)"}`,
+              background: homework.submitted ? "rgba(22,163,74,0.12)" : "rgba(255,255,255,0.05)",
               textAlign: "center",
               cursor: doneBusy ? "not-allowed" : "pointer",
-              fontFamily: "'JetBrains Mono', monospace",
+              fontFamily: "'DM Mono', monospace",
               fontSize: 9,
-              letterSpacing: "0.16em",
+              letterSpacing: "0.14em",
               textTransform: "uppercase",
-              color: homework.submitted ? "#88c8a0" : "#B08D57",
+              color: homework.submitted ? "#16A34A" : "rgba(255,255,255,0.55)",
               marginBottom: 18,
               opacity: doneBusy ? 0.6 : 1,
               transition: "all 0.2s",
@@ -564,10 +560,10 @@ function DetailDrawer({ homework, ai, doneBusy, onToggleDone, onRunAi, onEditDra
 
           {/* Description */}
           <div style={{ marginBottom: 18 }}>
-            <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, letterSpacing: "0.16em", textTransform: "uppercase", color: "rgba(176,141,87,0.5)", marginBottom: 8 }}>
+            <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 9, letterSpacing: "0.14em", textTransform: "uppercase", color: "rgba(255,255,255,0.28)", marginBottom: 8 }}>
               {t("homework.assignment")}
             </div>
-            <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: "rgba(232,220,199,0.68)", lineHeight: 1.65, whiteSpace: "pre-line" }}>
+            <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: "rgba(255,255,255,0.68)", lineHeight: 1.65, whiteSpace: "pre-line" }}>
               {homework.description}
             </div>
           </div>
@@ -575,15 +571,15 @@ function DetailDrawer({ homework, ai, doneBusy, onToggleDone, onRunAi, onEditDra
           {/* Attachments */}
           {homework.hasAttachments && (
             <div style={{ marginBottom: 18 }}>
-              <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, letterSpacing: "0.16em", textTransform: "uppercase", color: "rgba(176,141,87,0.5)", marginBottom: 8 }}>
+              <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 9, letterSpacing: "0.14em", textTransform: "uppercase", color: "rgba(255,255,255,0.28)", marginBottom: 8 }}>
                 {t("homework.attachments")}
               </div>
               {attLoading ? (
-                <div style={{ height: 36, background: "rgba(176,141,87,0.06)", borderRadius: 6 }} />
+                <div style={{ height: 36, background: "rgba(255,255,255,0.05)", borderRadius: 5 }} />
               ) : attError ? (
-                <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, color: "#c88888" }}>{attError}</p>
+                <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, color: "#DC2626" }}>{attError}</p>
               ) : attachments.length === 0 ? (
-                <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, color: "rgba(232,220,199,0.3)" }}>{t("homework.noAttachments")}</p>
+                <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, color: "rgba(255,255,255,0.28)" }}>{t("homework.noAttachments")}</p>
               ) : (
                 <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 6 }}>
                   {attachments.map((f) => (
@@ -596,22 +592,22 @@ function DetailDrawer({ homework, ai, doneBusy, onToggleDone, onRunAi, onEditDra
                           display: "flex",
                           alignItems: "center",
                           gap: 8,
-                          background: "rgba(176,141,87,0.06)",
-                          border: "1px solid rgba(176,141,87,0.14)",
-                          borderRadius: 6,
+                          background: "rgba(255,255,255,0.05)",
+                          border: "1px solid rgba(255,255,255,0.10)",
+                          borderRadius: 5,
                           padding: "8px 10px",
                           textDecoration: "none",
-                          color: "#E8DCC7",
+                          color: "rgba(255,255,255,0.80)",
                         }}
                       >
                         <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
-                          <path d="M7 1v8M4 6l3 3 3-3M2 11h10" stroke="#B08D57" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+                          <path d="M7 1v8M4 6l3 3 3-3M2 11h10" stroke="#CC2B2B" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
                         </svg>
                         <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                           {f.name}
                         </span>
                         {f.extension && (
-                          <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 8, textTransform: "uppercase", color: "rgba(232,220,199,0.4)" }}>
+                          <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 8, textTransform: "uppercase", color: "rgba(255,255,255,0.30)" }}>
                             {f.extension}
                           </span>
                         )}
@@ -623,26 +619,26 @@ function DetailDrawer({ homework, ai, doneBusy, onToggleDone, onRunAi, onEditDra
             </div>
           )}
 
-          <div style={{ height: 1, background: "rgba(176,141,87,0.1)", marginBottom: 18 }} />
+          <div style={{ height: 1, background: "rgba(255,255,255,0.07)", marginBottom: 18 }} />
 
           {/* AI section */}
           {ai.phase === "idle" && (
             <div
               style={{
                 padding: "12px 14px",
-                background: "rgba(30,30,30,0.4)",
-                border: "1px solid rgba(176,141,87,0.1)",
-                borderRadius: 8,
+                background: "rgba(255,255,255,0.03)",
+                border: "1px solid rgba(255,255,255,0.07)",
+                borderRadius: 6,
                 display: "flex",
                 alignItems: "center",
                 gap: 10,
               }}
             >
               <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
-                <circle cx="8" cy="8" r="3" stroke="rgba(176,141,87,0.35)" strokeWidth="1.2" />
-                <path d="M8 1v1.5M8 13.5V15M15 8h-1.5M2.5 8H1M12.6 3.4l-1.1 1.1M4.5 11.5l-1.1 1.1M12.6 12.6l-1.1-1.1M4.5 4.5L3.4 3.4" stroke="rgba(176,141,87,0.35)" strokeWidth="1.2" strokeLinecap="round" />
+                <circle cx="8" cy="8" r="3" stroke="rgba(204,43,43,0.45)" strokeWidth="1.2" />
+                <path d="M8 1v1.5M8 13.5V15M15 8h-1.5M2.5 8H1M12.6 3.4l-1.1 1.1M4.5 11.5l-1.1 1.1M12.6 12.6l-1.1-1.1M4.5 4.5L3.4 3.4" stroke="rgba(204,43,43,0.45)" strokeWidth="1.2" strokeLinecap="round" />
               </svg>
-              <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, letterSpacing: "0.14em", textTransform: "uppercase", color: "rgba(176,141,87,0.35)" }}>
+              <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase", color: "rgba(255,255,255,0.25)" }}>
                 {t("homework.aiUnavailable")}
               </span>
             </div>
@@ -652,9 +648,9 @@ function DetailDrawer({ homework, ai, doneBusy, onToggleDone, onRunAi, onEditDra
             <div
               style={{
                 padding: 16,
-                background: "rgba(176,141,87,0.06)",
-                borderRadius: 8,
-                border: "1px solid rgba(176,141,87,0.12)",
+                background: "rgba(204,43,43,0.06)",
+                borderRadius: 6,
+                border: "1px solid rgba(204,43,43,0.15)",
               }}
             >
               <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
@@ -662,20 +658,20 @@ function DetailDrawer({ homework, ai, doneBusy, onToggleDone, onRunAi, onEditDra
                   style={{
                     width: 14,
                     height: 14,
-                    border: "1.5px solid #B08D57",
+                    border: "1.5px solid #CC2B2B",
                     borderTopColor: "transparent",
                     borderRadius: "50%",
                     animation: "spin 0.8s linear infinite",
                     flexShrink: 0,
                   }}
                 />
-                <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, letterSpacing: "0.14em", color: "rgba(176,141,87,0.8)" }}>
+                <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 9, letterSpacing: "0.12em", color: "rgba(204,43,43,0.80)" }}>
                   {t("homework.aiGenerating")}
                 </span>
               </div>
-              <div style={{ height: 8, background: "rgba(176,141,87,0.08)", borderRadius: 4, marginBottom: 6, width: "88%" }} />
-              <div style={{ height: 8, background: "rgba(176,141,87,0.06)", borderRadius: 4, marginBottom: 6, width: "72%" }} />
-              <div style={{ height: 8, background: "rgba(176,141,87,0.04)", borderRadius: 4, width: "55%" }} />
+              <div style={{ height: 8, background: "rgba(255,255,255,0.06)", borderRadius: 4, marginBottom: 6, width: "88%" }} />
+              <div style={{ height: 8, background: "rgba(255,255,255,0.04)", borderRadius: 4, marginBottom: 6, width: "72%" }} />
+              <div style={{ height: 8, background: "rgba(255,255,255,0.03)", borderRadius: 4, width: "55%" }} />
             </div>
           )}
 
@@ -683,18 +679,18 @@ function DetailDrawer({ homework, ai, doneBusy, onToggleDone, onRunAi, onEditDra
             <div>
               <div
                 style={{
-                  background: "rgba(60,100,72,0.1)",
-                  border: "1px solid rgba(60,100,72,0.22)",
-                  borderRadius: 6,
+                  background: "rgba(22,163,74,0.08)",
+                  border: "1px solid rgba(22,163,74,0.22)",
+                  borderRadius: 5,
                   padding: "10px 14px",
                   marginBottom: 14,
                 }}
               >
-                <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 11, color: "#88c8a0" }}>
+                <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 11, color: "#16A34A" }}>
                   {t("homework.aiReady")}
                 </span>
               </div>
-              <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, letterSpacing: "0.14em", textTransform: "uppercase", color: "rgba(176,141,87,0.5)", marginBottom: 6 }}>
+              <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase", color: "rgba(255,255,255,0.30)", marginBottom: 6 }}>
                 {t("homework.aiDraftLabel")}
               </div>
               <textarea
@@ -706,14 +702,17 @@ function DetailDrawer({ homework, ai, doneBusy, onToggleDone, onRunAi, onEditDra
                 style={{
                   width: "100%",
                   padding: 12,
-                  fontFamily: "'JetBrains Mono', monospace",
+                  fontFamily: "'DM Mono', monospace",
                   fontSize: 11,
                   lineHeight: 1.65,
                   resize: "vertical",
-                  borderColor: "rgba(176,141,87,0.28)",
+                  background: "rgba(255,255,255,0.06)",
+                  border: "1px solid rgba(255,255,255,0.12)",
+                  borderRadius: 4,
+                  color: "rgba(255,255,255,0.80)",
                 }}
               />
-              <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 10, color: "rgba(232,220,199,0.22)", marginTop: 6 }}>
+              <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 10, color: "rgba(255,255,255,0.22)", marginTop: 6 }}>
                 {t("homework.aiNothingSubmitted")}
               </div>
             </div>
@@ -723,14 +722,14 @@ function DetailDrawer({ homework, ai, doneBusy, onToggleDone, onRunAi, onEditDra
             <div>
               <div
                 style={{
-                  background: "rgba(90,40,40,0.18)",
-                  border: "1px solid rgba(90,40,40,0.35)",
-                  borderRadius: 6,
+                  background: "rgba(220,38,38,0.08)",
+                  border: "1px solid rgba(220,38,38,0.25)",
+                  borderRadius: 5,
                   padding: "10px 14px",
                   marginBottom: 12,
                 }}
               >
-                <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 11, color: "#c88888" }}>
+                <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 11, color: "#DC2626" }}>
                   {ai.message}
                 </span>
               </div>
@@ -755,9 +754,9 @@ function AiButton({ onClick, labelKey = "homework.aiButton" }: { onClick: () => 
       style={{
         width: "100%",
         padding: 13,
-        borderRadius: 8,
-        background: hovered ? "rgba(176,141,87,0.14)" : "rgba(176,141,87,0.08)",
-        border: "1px solid rgba(176,141,87,0.25)",
+        borderRadius: 6,
+        background: hovered ? "rgba(204,43,43,0.14)" : "rgba(204,43,43,0.07)",
+        border: "1px solid rgba(204,43,43,0.25)",
         textAlign: "center",
         cursor: "pointer",
         display: "flex",
@@ -768,9 +767,9 @@ function AiButton({ onClick, labelKey = "homework.aiButton" }: { onClick: () => 
       }}
     >
       <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
-        <path d="M7 1l1.4 3.5L12 5 9.7 7.3l.8 3.7L7 9.5 3.5 11l.8-3.7L2 5l3.6-.5L7 1z" stroke="#B08D57" strokeWidth="1.2" strokeLinejoin="round" />
+        <path d="M7 1l1.4 3.5L12 5 9.7 7.3l.8 3.7L7 9.5 3.5 11l.8-3.7L2 5l3.6-.5L7 1z" stroke="#CC2B2B" strokeWidth="1.2" strokeLinejoin="round" />
       </svg>
-      <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, letterSpacing: "0.16em", textTransform: "uppercase", color: "#B08D57" }}>
+      <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, letterSpacing: "0.14em", textTransform: "uppercase", color: "#CC2B2B" }}>
         {t(labelKey)}
       </span>
     </button>
@@ -782,15 +781,15 @@ function ErrorPanel({ message }: { message: string }) {
   return (
     <div
       style={{
-        background: "rgba(90,40,40,0.2)",
-        border: "1px solid rgba(90,40,40,0.35)",
-        borderRadius: 10,
+        background: "rgba(220,38,38,0.06)",
+        border: "1px solid rgba(220,38,38,0.22)",
+        borderRadius: 8,
         padding: "48px 24px",
         textAlign: "center",
       }}
     >
-      <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: "#c88888", margin: 0 }}>{message}</p>
-      <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 11, color: "rgba(232,220,199,0.3)", margin: "6px 0 0" }}>
+      <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: "#DC2626", margin: 0 }}>{message}</p>
+      <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 11, color: "rgba(19,19,19,0.35)", margin: "6px 0 0" }}>
         {t("common.retryOrLogin")}
       </p>
     </div>

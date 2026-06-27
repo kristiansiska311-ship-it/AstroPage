@@ -1,50 +1,50 @@
-@import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=JetBrains+Mono:wght@400;500&family=Inter:wght@300;400;500;600&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&family=Inter:wght@400;500;600&display=swap");
 @import "tailwindcss";
 
 @theme {
-  --font-display: "Cormorant Garamond", serif;
+  --font-display: "Instrument Serif", serif;
   --font-sans: "Inter", sans-serif;
-  --font-mono: "JetBrains Mono", monospace;
+  --font-mono: "DM Mono", monospace;
 }
 
 :root {
-  --ap-bg:           #0a0805;
-  --ap-sidebar:      #0e0c09;
-  --ap-card:         #161208;
-  --ap-card-hover:   #1c1710;
-  --ap-drawer:       #120f0b;
+  /* Surfaces */
+  --ap-bg:           #F2F0E8;
+  --ap-sidebar:      #111111;
+  --ap-card:         #FFFFFF;
+  --ap-card-hover:   #F7F5EF;
+  --ap-drawer:       #111111;
 
-  --ap-copper:              #B08D57;
-  --ap-copper-dim:          rgba(176,141,87,0.12);
-  --ap-copper-border:       rgba(176,141,87,0.14);
-  --ap-copper-border-strong:rgba(176,141,87,0.28);
+  /* Accent */
+  --ap-accent:              #CC2B2B;
+  --ap-accent-dim:          rgba(204,43,43,0.07);
+  --ap-accent-border:       rgba(204,43,43,0.18);
+  --ap-accent-border-strong:rgba(204,43,43,0.35);
 
-  --ap-cream:    #E8DCC7;
-  --ap-cream-60: rgba(232,220,199,0.60);
-  --ap-cream-35: rgba(232,220,199,0.35);
-  --ap-cream-20: rgba(232,220,199,0.20);
+  /* Text on light background */
+  --ap-text:     #131313;
+  --ap-text-60:  rgba(19,19,19,0.60);
+  --ap-text-40:  rgba(19,19,19,0.40);
+  --ap-text-25:  rgba(19,19,19,0.25);
 
-  --ap-done-bg:        rgba(50,90,60,0.20);
-  --ap-done-border:    rgba(50,90,60,0.35);
-  --ap-done-text:      #88c8a0;
-  --ap-overdue-bg:     rgba(90,40,40,0.20);
-  --ap-overdue-border: rgba(90,40,40,0.35);
-  --ap-overdue-text:   #c88888;
-  --ap-soon-bg:        rgba(110,78,20,0.20);
-  --ap-soon-border:    rgba(110,78,20,0.35);
-  --ap-soon-text:      #d4a85a;
-  --ap-pending-bg:     rgba(30,54,84,0.20);
-  --ap-pending-border: rgba(30,54,84,0.35);
-  --ap-pending-text:   #7ab0d4;
-}
+  /* Borders */
+  --ap-border:        #E5E3DC;
+  --ap-border-medium: rgba(0,0,0,0.12);
+  --ap-border-strong: rgba(0,0,0,0.22);
 
-@keyframes grain {
-  0%   { transform: translate(0, 0); }
-  20%  { transform: translate(-3%, 2%); }
-  40%  { transform: translate(2%, -3%); }
-  60%  { transform: translate(-2%, 3%); }
-  80%  { transform: translate(3%, 1%); }
-  100% { transform: translate(0, 0); }
+  /* Status — light-mode semantic tones */
+  --ap-done-bg:        rgba(22,163,74,0.08);
+  --ap-done-border:    rgba(22,163,74,0.25);
+  --ap-done-text:      #16A34A;
+  --ap-overdue-bg:     rgba(220,38,38,0.08);
+  --ap-overdue-border: rgba(220,38,38,0.25);
+  --ap-overdue-text:   #DC2626;
+  --ap-soon-bg:        rgba(180,83,9,0.08);
+  --ap-soon-border:    rgba(180,83,9,0.25);
+  --ap-soon-text:      #B45309;
+  --ap-pending-bg:     rgba(29,78,216,0.08);
+  --ap-pending-border: rgba(29,78,216,0.20);
+  --ap-pending-text:   #1D4ED8;
 }
 
 @keyframes spin {
@@ -58,7 +58,7 @@ html, body, #root {
 
 body {
   background-color: var(--ap-bg);
-  color: var(--ap-cream);
+  color: var(--ap-text);
   font-family: "Inter", sans-serif;
   -webkit-font-smoothing: antialiased;
 }
@@ -66,25 +66,28 @@ body {
 * {
   box-sizing: border-box;
   scrollbar-width: thin;
-  scrollbar-color: rgba(176,141,87,0.18) transparent;
+  scrollbar-color: rgba(0,0,0,0.14) transparent;
 }
 
 ::-webkit-scrollbar       { width: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(176,141,87,0.18); border-radius: 2px; }
+::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.14); border-radius: 2px; }
 
 input, textarea, select {
-  color: var(--ap-cream);
-  background: rgba(176,141,87,0.06);
-  border: 1px solid rgba(176,141,87,0.18);
-  border-radius: 6px;
+  color: #131313;
+  background: #FFFFFF;
+  border: 1px solid #E5E3DC;
+  border-radius: 4px;
   outline: none;
   font-family: inherit;
-  transition: border-color 0.2s;
+  transition: border-color 0.15s, box-shadow 0.15s;
 }
-input:focus, textarea:focus, select:focus { border-color: rgba(176,141,87,0.45); }
-input::placeholder, textarea::placeholder { color: rgba(232,220,199,0.28); }
-select option { background: #161208; }
+input:focus, textarea:focus, select:focus {
+  border-color: #CC2B2B;
+  box-shadow: 0 0 0 2px rgba(204,43,43,0.10);
+}
+input::placeholder, textarea::placeholder { color: rgba(19,19,19,0.28); }
+select option { background: #FFFFFF; color: #131313; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {

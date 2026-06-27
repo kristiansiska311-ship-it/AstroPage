@@ -1,9 +1,4 @@
-// Manual reload control shared by every data page. Shows a spinning glyph while
-// a refresh is in flight and, optionally, how long ago the data was last loaded
-// (so the user knows whether what they're seeing is current).
-
 import { useEffect, useState } from "react";
-
 import { useT } from "../i18n/LanguageContext";
 
 type Translate = (key: string, vars?: Record<string, string | number>) => string;
@@ -27,7 +22,6 @@ export default function RefreshButton({
   lastUpdated: number | null;
 }) {
   const { t } = useT();
-  // Re-render once a minute so the "X min ago" label stays accurate.
   const [, force] = useState(0);
   useEffect(() => {
     const id = window.setInterval(() => force((n) => n + 1), 60_000);
@@ -39,11 +33,11 @@ export default function RefreshButton({
       {lastUpdated !== null && (
         <span
           style={{
-            fontFamily: "'JetBrains Mono', monospace",
+            fontFamily: "'DM Mono', monospace",
             fontSize: 9,
-            letterSpacing: "0.1em",
+            letterSpacing: "0.08em",
             textTransform: "uppercase",
-            color: "rgba(176,141,87,0.45)",
+            color: "rgba(19,19,19,0.35)",
           }}
         >
           {refreshing ? t("refresh.refreshing") : t("refresh.updated", { ago: agoLabel(lastUpdated, t) })}
@@ -60,12 +54,13 @@ export default function RefreshButton({
           placeItems: "center",
           width: 30,
           height: 30,
-          borderRadius: 6,
-          border: "1px solid rgba(176,141,87,0.18)",
-          background: "transparent",
-          color: "#B08D57",
+          borderRadius: 4,
+          border: "1px solid #E5E3DC",
+          background: "#FFFFFF",
+          color: "rgba(19,19,19,0.50)",
           cursor: refreshing ? "default" : "pointer",
           opacity: refreshing ? 0.6 : 1,
+          transition: "border-color 0.15s",
         }}
       >
         <svg

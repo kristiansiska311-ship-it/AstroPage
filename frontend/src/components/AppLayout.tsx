@@ -6,20 +6,21 @@ import { useIsMobile } from "../hooks/useIsMobile";
 import LanguageSwitcher from "./LanguageSwitcher";
 
 
-const COPPER = "#B08D57";
-const COPPER_DIM = "rgba(176,141,87,0.12)";
-const MUTED = "rgba(232,220,199,0.52)";
-const ACTIVE_SHADOW = "inset 2px 0 0 #B08D57";
+const ACCENT = "#CC2B2B";
+const ACTIVE_DIM = "rgba(204,43,43,0.10)";
+const SIDEBAR_TEXT = "rgba(255,255,255,0.72)";
+const SIDEBAR_MUTED = "rgba(255,255,255,0.30)";
 
 
 const itemBase: React.CSSProperties = {
   display: "flex",
   alignItems: "center",
   gap: 10,
-  padding: "9px 10px",
-  borderRadius: 6,
+  padding: "9px 12px",
+  borderRadius: 5,
   cursor: "pointer",
   textDecoration: "none",
+  position: "relative",
 };
 
 function NavItem({
@@ -41,16 +42,18 @@ function NavItem({
         <div
           style={{
             ...itemBase,
-            background: isActive ? COPPER_DIM : "transparent",
-            boxShadow: isActive ? ACTIVE_SHADOW : "none",
+            background: isActive ? ACTIVE_DIM : "transparent",
+            borderLeft: isActive ? `2px solid ${ACCENT}` : "2px solid transparent",
+            paddingLeft: 10,
           }}
         >
-          {icon(isActive ? COPPER : MUTED)}
+          {icon(isActive ? ACCENT : SIDEBAR_TEXT)}
           <span
             style={{
               fontFamily: "'Inter', sans-serif",
               fontSize: 13,
-              color: isActive ? COPPER : MUTED,
+              fontWeight: isActive ? 500 : 400,
+              color: isActive ? "#FFFFFF" : SIDEBAR_TEXT,
             }}
           >
             {label}
@@ -78,35 +81,41 @@ function SidebarContent({ onNavClick }: { onNavClick?: () => void }) {
       {/* Logo */}
       <div
         style={{
-          padding: "20px 20px 16px",
-          borderBottom: "1px solid rgba(176,141,87,0.1)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: 9,
+          padding: "22px 16px 18px",
+          borderBottom: "1px solid rgba(255,255,255,0.07)",
         }}
       >
-        <div style={{ width: 1, height: 13, background: "rgba(176,141,87,0.45)" }} />
-        <span
-          style={{
-            fontFamily: "'Cormorant Garamond', serif",
-            fontSize: 14,
-            fontWeight: 400,
-            color: "#E8DCC7",
-            letterSpacing: "0.16em",
-            textTransform: "uppercase",
-          }}
-        >
-          AstroPage
-        </span>
-        <div style={{ width: 1, height: 13, background: "rgba(176,141,87,0.45)" }} />
+        <div style={{ display: "flex", alignItems: "baseline", gap: 5 }}>
+          <span
+            style={{
+              fontFamily: "'DM Mono', monospace",
+              fontSize: 11,
+              fontWeight: 500,
+              color: ACCENT,
+              letterSpacing: "0.04em",
+            }}
+          >
+            A/
+          </span>
+          <span
+            style={{
+              fontFamily: "'Inter', sans-serif",
+              fontSize: 13,
+              fontWeight: 600,
+              color: "#FFFFFF",
+              letterSpacing: "0.02em",
+            }}
+          >
+            AstroPage
+          </span>
+        </div>
       </div>
 
       {/* User card */}
       <div
         style={{
-          padding: "12px 16px 10px",
-          borderBottom: "1px solid rgba(176,141,87,0.1)",
+          padding: "12px 14px 10px",
+          borderBottom: "1px solid rgba(255,255,255,0.07)",
           display: "flex",
           alignItems: "center",
           gap: 10,
@@ -114,18 +123,19 @@ function SidebarContent({ onNavClick }: { onNavClick?: () => void }) {
       >
         <div
           style={{
-            width: 32,
-            height: 32,
-            borderRadius: "50%",
-            background: "rgba(176,141,87,0.1)",
-            border: "1px solid rgba(176,141,87,0.28)",
+            width: 30,
+            height: 30,
+            borderRadius: 4,
+            background: ACTIVE_DIM,
+            border: `1px solid ${ACCENT}`,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             flexShrink: 0,
-            fontFamily: "'JetBrains Mono', monospace",
+            fontFamily: "'DM Mono', monospace",
             fontSize: 10,
-            color: COPPER,
+            fontWeight: 500,
+            color: ACCENT,
           }}
         >
           {initials}
@@ -136,7 +146,7 @@ function SidebarContent({ onNavClick }: { onNavClick?: () => void }) {
               fontFamily: "'Inter', sans-serif",
               fontSize: 12,
               fontWeight: 500,
-              color: "#E8DCC7",
+              color: "rgba(255,255,255,0.85)",
               overflow: "hidden",
               textOverflow: "ellipsis",
               whiteSpace: "nowrap",
@@ -146,10 +156,10 @@ function SidebarContent({ onNavClick }: { onNavClick?: () => void }) {
           </div>
           <div
             style={{
-              fontFamily: "'JetBrains Mono', monospace",
-              fontSize: 8,
-              color: "rgba(232,220,199,0.28)",
-              letterSpacing: "0.06em",
+              fontFamily: "'DM Mono', monospace",
+              fontSize: 9,
+              color: "rgba(255,255,255,0.28)",
+              letterSpacing: "0.03em",
               marginTop: 2,
             }}
           >
@@ -159,7 +169,7 @@ function SidebarContent({ onNavClick }: { onNavClick?: () => void }) {
       </div>
 
       {/* Primary nav */}
-      <nav style={{ flex: 1, padding: 10, display: "flex", flexDirection: "column", gap: 1, overflowY: "auto" }}>
+      <nav style={{ flex: 1, padding: "10px 6px", display: "flex", flexDirection: "column", gap: 2, overflowY: "auto" }}>
         <NavItem
           to="/"
           end
@@ -223,21 +233,21 @@ function SidebarContent({ onNavClick }: { onNavClick?: () => void }) {
       {/* Bottom */}
       <div
         style={{
-          borderTop: "1px solid rgba(176,141,87,0.1)",
-          padding: "8px 10px",
+          borderTop: "1px solid rgba(255,255,255,0.07)",
+          padding: "8px 6px",
           display: "flex",
           flexDirection: "column",
-          gap: 1,
+          gap: 2,
         }}
       >
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "4px 10px 8px" }}>
           <span
             style={{
-              fontFamily: "'JetBrains Mono', monospace",
+              fontFamily: "'DM Mono', monospace",
               fontSize: 8,
-              letterSpacing: "0.12em",
+              letterSpacing: "0.10em",
               textTransform: "uppercase",
-              color: "rgba(232,220,199,0.28)",
+              color: SIDEBAR_MUTED,
             }}
           >
             {t("lang.label")}
@@ -275,14 +285,14 @@ export default function AppLayout() {
 
   if (isMobile) {
     return (
-      <div style={{ display: "flex", flexDirection: "column", height: "100dvh", background: "#0a0805" }}>
+      <div style={{ display: "flex", flexDirection: "column", height: "100dvh", background: "#F2F0E8" }}>
         {/* Mobile top bar */}
         <header
           style={{
             height: 52,
             minHeight: 52,
-            background: "#0e0c09",
-            borderBottom: "1px solid rgba(176,141,87,0.14)",
+            background: "#111111",
+            borderBottom: "1px solid rgba(255,255,255,0.07)",
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
@@ -303,29 +313,17 @@ export default function AppLayout() {
               background: "transparent",
               border: "none",
               cursor: "pointer",
-              borderRadius: 6,
+              borderRadius: 4,
             }}
           >
-            <span style={{ width: 18, height: 1.5, background: COPPER, display: "block" }} />
-            <span style={{ width: 18, height: 1.5, background: COPPER, display: "block" }} />
-            <span style={{ width: 18, height: 1.5, background: COPPER, display: "block" }} />
+            <span style={{ width: 18, height: 1.5, background: "rgba(255,255,255,0.7)", display: "block" }} />
+            <span style={{ width: 18, height: 1.5, background: "rgba(255,255,255,0.7)", display: "block" }} />
+            <span style={{ width: 18, height: 1.5, background: "rgba(255,255,255,0.7)", display: "block" }} />
           </button>
 
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <div style={{ width: 1, height: 12, background: "rgba(176,141,87,0.45)" }} />
-            <span
-              style={{
-                fontFamily: "'Cormorant Garamond', serif",
-                fontSize: 13,
-                fontWeight: 400,
-                color: "#E8DCC7",
-                letterSpacing: "0.16em",
-                textTransform: "uppercase",
-              }}
-            >
-              AstroPage
-            </span>
-            <div style={{ width: 1, height: 12, background: "rgba(176,141,87,0.45)" }} />
+          <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
+            <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 11, fontWeight: 500, color: "#CC2B2B" }}>A/</span>
+            <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, fontWeight: 600, color: "#FFFFFF" }}>AstroPage</span>
           </div>
 
           {/* Spacer for centering */}
@@ -333,7 +331,7 @@ export default function AppLayout() {
         </header>
 
         {/* Main content */}
-        <main style={{ flex: 1, minWidth: 0, overflowY: "auto", background: "#0a0805" }}>
+        <main style={{ flex: 1, minWidth: 0, overflowY: "auto", background: "#F2F0E8" }}>
           <Outlet />
         </main>
 
@@ -344,7 +342,7 @@ export default function AppLayout() {
             style={{
               position: "fixed",
               inset: 0,
-              background: "rgba(0,0,0,0.5)",
+              background: "rgba(0,0,0,0.4)",
               zIndex: 59,
             }}
           />
@@ -358,14 +356,14 @@ export default function AppLayout() {
             left: 0,
             bottom: 0,
             width: 260,
-            background: "#0e0c09",
-            borderRight: "1px solid rgba(176,141,87,0.14)",
+            background: "#111111",
+            borderRight: "1px solid rgba(255,255,255,0.07)",
             display: "flex",
             flexDirection: "column",
             overflow: "hidden",
             zIndex: 60,
             transform: drawerOpen ? "translateX(0)" : "translateX(-100%)",
-            transition: "transform 0.3s cubic-bezier(0.2,0.7,0.15,1)",
+            transition: "transform 0.28s cubic-bezier(0.2,0.7,0.15,1)",
           }}
         >
           <div
@@ -387,14 +385,14 @@ export default function AppLayout() {
                 alignItems: "center",
                 justifyContent: "center",
                 background: "transparent",
-                border: "1px solid rgba(176,141,87,0.18)",
-                borderRadius: 5,
+                border: "1px solid rgba(255,255,255,0.12)",
+                borderRadius: 4,
                 cursor: "pointer",
                 flexShrink: 0,
               }}
             >
               <svg width="9" height="9" viewBox="0 0 10 10" fill="none">
-                <path d="M1 1l8 8M9 1L1 9" stroke="rgba(232,220,199,0.45)" strokeWidth="1.4" strokeLinecap="round" />
+                <path d="M1 1l8 8M9 1L1 9" stroke="rgba(255,255,255,0.45)" strokeWidth="1.4" strokeLinecap="round" />
               </svg>
             </button>
           </div>
@@ -405,14 +403,14 @@ export default function AppLayout() {
   }
 
   return (
-    <div style={{ display: "flex", height: "100dvh", overflow: "hidden", background: "#0a0805" }}>
-      {/* ── Sidebar ── */}
+    <div style={{ display: "flex", height: "100dvh", overflow: "hidden", background: "#F2F0E8" }}>
+      {/* Sidebar */}
       <aside
         style={{
           width: 236,
           minWidth: 236,
-          background: "#0e0c09",
-          borderRight: "1px solid rgba(176,141,87,0.14)",
+          background: "#111111",
+          borderRight: "1px solid rgba(255,255,255,0.06)",
           display: "flex",
           flexDirection: "column",
           overflow: "hidden",
@@ -422,7 +420,7 @@ export default function AppLayout() {
       </aside>
 
       {/* Main */}
-      <main style={{ flex: 1, minWidth: 0, overflowY: "auto", background: "#0a0805" }}>
+      <main style={{ flex: 1, minWidth: 0, overflowY: "auto", background: "#F2F0E8" }}>
         <Outlet />
       </main>
     </div>
@@ -434,17 +432,18 @@ function LogoutButton({ onClick, label }: { onClick: () => void; label: string }
     <button
       type="button"
       onClick={onClick}
-      onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(122,48,48,0.12)")}
+      onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(220,38,38,0.08)")}
       onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
       style={{
         display: "flex",
         alignItems: "center",
         gap: 10,
-        padding: "8px 10px",
-        borderRadius: 6,
+        padding: "9px 12px",
+        borderRadius: 5,
         cursor: "pointer",
         background: "transparent",
         border: "none",
+        borderLeft: "2px solid transparent",
         width: "100%",
         textAlign: "left",
         transition: "background 0.15s",
@@ -453,13 +452,13 @@ function LogoutButton({ onClick, label }: { onClick: () => void; label: string }
       <svg width="14" height="14" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
         <path
           d="M6 2H3a1 1 0 00-1 1v10a1 1 0 001 1h3M10.5 11l3-3-3-3M13.5 8H6"
-          stroke="rgba(200,120,120,0.55)"
+          stroke="rgba(220,100,100,0.55)"
           strokeWidth="1.3"
           strokeLinecap="round"
           strokeLinejoin="round"
         />
       </svg>
-      <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: "rgba(200,120,120,0.45)" }}>
+      <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: "rgba(220,100,100,0.50)" }}>
         {label}
       </span>
     </button>

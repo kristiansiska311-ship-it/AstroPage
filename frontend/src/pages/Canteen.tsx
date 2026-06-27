@@ -57,7 +57,6 @@ type Toast = { tone: "error" | "success"; message: string } | null;
 export default function CanteenPage() {
   const { t } = useT();
   const isMobile = useIsMobile();
-  // Cached across tab switches; auto-refreshes when stale, plus a manual button.
   const { data, loading, refreshing, error, lastUpdated, refresh, mutate } =
     useCachedResource<MealDayDTO[]>(MEALS_CACHE_KEY, () => api.listMeals(WEEKS_AHEAD), {
       errorFallback: t("canteen.loadError"),
@@ -86,8 +85,6 @@ export default function CanteenPage() {
   }, [meals]);
 
   function setOrdered(date: string, ordered: string | null) {
-    // `mutate` (updater form) keeps the on-screen list and cache in sync and is
-    // race-safe when several days are changed in quick succession.
     mutate((prev) => (prev ?? []).map((m) => (m.date === date ? { ...m, ordered_meal: ordered } : m)));
   }
 
@@ -115,10 +112,8 @@ export default function CanteenPage() {
     setBulkBusy(true);
     try {
       const res = await api.bulkSignup(bulkDays, bulkChoice);
-      refresh(); // bulk changed server state — force a fresh meals fetch
+      refresh();
       if (res.updated_days === 0) {
-        // Nothing actually landed on EduPage — usually every day was already
-        // ordered, closed, or past its ordering window. Don't fake success.
         const skipped = res.skipped_days ? t("canteen.bulkNoneSkipped", { n: res.skipped_days }) : "";
         setToast({ tone: "error", message: t("canteen.bulkNone", { skipped }) });
       } else {
@@ -140,10 +135,10 @@ export default function CanteenPage() {
       {/* Header */}
       <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 16, marginBottom: 24, flexWrap: "wrap" }}>
         <div>
-          <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(176,141,87,0.5)", marginBottom: 6 }}>
+          <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, letterSpacing: "0.14em", textTransform: "uppercase", color: "#CC2B2B", marginBottom: 6 }}>
             {t("canteen.eyebrow")}
           </div>
-          <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 34, fontWeight: 500, color: "#E8DCC7", letterSpacing: "-0.01em" }}>
+          <div style={{ fontFamily: "'Instrument Serif', serif", fontSize: 34, fontWeight: 400, color: "#131313", letterSpacing: "-0.01em" }}>
             {t("canteen.title")}
           </div>
         </div>
@@ -153,24 +148,24 @@ export default function CanteenPage() {
       {/* Bulk automation */}
       <div
         style={{
-          background: "#161208",
-          border: "1px solid rgba(176,141,87,0.18)",
-          borderRadius: 10,
+          background: "#FFFFFF",
+          border: "1px solid #E5E3DC",
+          borderRadius: 8,
           padding: "20px 22px",
-          marginBottom: 24,
+          marginBottom: 22,
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
           <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
-            <path d="M7 1l1.4 3.5L12 5 9.7 7.3l.8 3.7L7 9.5 3.5 11l.8-3.7L2 5l3.6-.5L7 1z" stroke="#B08D57" strokeWidth="1.2" strokeLinejoin="round" />
+            <path d="M7 1l1.4 3.5L12 5 9.7 7.3l.8 3.7L7 9.5 3.5 11l.8-3.7L2 5l3.6-.5L7 1z" stroke="#CC2B2B" strokeWidth="1.2" strokeLinejoin="round" />
           </svg>
-          <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, letterSpacing: "0.16em", textTransform: "uppercase", color: "#B08D57" }}>
+          <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 9, letterSpacing: "0.14em", textTransform: "uppercase", color: "#CC2B2B" }}>
             {t("canteen.autoOrder")}
           </span>
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "1fr 1fr auto", gap: 12, alignItems: "end" }}>
+        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "1fr 1fr auto", gap: 10, alignItems: "end" }}>
           <div>
-            <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, letterSpacing: "0.14em", textTransform: "uppercase", color: "rgba(176,141,87,0.5)", marginBottom: 5 }}>
+            <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase", color: "rgba(19,19,19,0.45)", marginBottom: 5 }}>
               {t("canteen.daysCount")}
             </div>
             <input
@@ -180,18 +175,18 @@ export default function CanteenPage() {
               value={bulkDays}
               disabled={bulkBusy}
               onChange={(e) => setBulkDays(Math.min(31, Math.max(1, Number(e.target.value) || 1)))}
-              style={{ width: "100%", padding: "9px 11px", fontFamily: "'JetBrains Mono', monospace", fontSize: 14 }}
+              style={{ width: "100%", padding: "9px 11px", fontFamily: "'DM Mono', monospace", fontSize: 14 }}
             />
           </div>
           <div>
-            <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, letterSpacing: "0.14em", textTransform: "uppercase", color: "rgba(176,141,87,0.5)", marginBottom: 5 }}>
+            <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase", color: "rgba(19,19,19,0.45)", marginBottom: 5 }}>
               {t("canteen.preferredMenu")}
             </div>
             <select
               value={bulkChoice}
               disabled={bulkBusy}
               onChange={(e) => setBulkChoice(e.target.value)}
-              style={{ width: "100%", padding: "9px 11px", fontFamily: "'JetBrains Mono', monospace", fontSize: 13 }}
+              style={{ width: "100%", padding: "9px 11px", fontFamily: "'DM Mono', monospace", fontSize: 13 }}
             >
               {letters.map((l) => (
                 <option key={l} value={l}>{t("canteen.menu", { letter: l })}</option>
@@ -203,15 +198,15 @@ export default function CanteenPage() {
             onClick={runBulk}
             disabled={bulkBusy || loading || !!error}
             style={{
-              background: bulkBusy ? "rgba(176,141,87,0.5)" : "#B08D57",
-              color: "#0a0805",
-              fontFamily: "'JetBrains Mono', monospace",
+              background: bulkBusy ? "rgba(204,43,43,0.6)" : "#CC2B2B",
+              color: "#FFFFFF",
+              fontFamily: "'DM Mono', monospace",
               fontSize: 9,
-              letterSpacing: "0.16em",
+              letterSpacing: "0.14em",
               textTransform: "uppercase",
               fontWeight: 500,
               padding: "10px 14px",
-              borderRadius: 6,
+              borderRadius: 4,
               border: "none",
               cursor: bulkBusy ? "not-allowed" : "pointer",
               whiteSpace: "nowrap",
@@ -225,34 +220,34 @@ export default function CanteenPage() {
       </div>
 
       {error ? (
-        <div style={{ background: "rgba(90,40,40,0.2)", border: "1px solid rgba(90,40,40,0.35)", borderRadius: 10, padding: "48px 24px", textAlign: "center" }}>
-          <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: "#c88888", margin: 0 }}>{error}</p>
-          <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 11, color: "rgba(232,220,199,0.3)", margin: "6px 0 0" }}>{t("common.retryOrLogin")}</p>
+        <div style={{ background: "rgba(220,38,38,0.06)", border: "1px solid rgba(220,38,38,0.22)", borderRadius: 8, padding: "48px 24px", textAlign: "center" }}>
+          <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, color: "#DC2626", margin: 0 }}>{error}</p>
+          <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 11, color: "rgba(19,19,19,0.35)", margin: "6px 0 0" }}>{t("common.retryOrLogin")}</p>
         </div>
       ) : loading ? (
         isMobile ? (
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {Array.from({ length: 5 }, (_, i) => (
-              <div key={i} style={{ height: 120, background: "rgba(176,141,87,0.06)", borderRadius: 10, border: "1px solid rgba(176,141,87,0.08)" }} />
+              <div key={i} style={{ height: 120, background: "rgba(0,0,0,0.04)", borderRadius: 8, border: "1px solid #E5E3DC" }} />
             ))}
           </div>
         ) : (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 10 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 8 }}>
             {Array.from({ length: 5 }, (_, i) => (
-              <div key={i} style={{ height: 288, background: "rgba(176,141,87,0.06)", borderRadius: 10, border: "1px solid rgba(176,141,87,0.08)" }} />
+              <div key={i} style={{ height: 288, background: "rgba(0,0,0,0.04)", borderRadius: 8, border: "1px solid #E5E3DC" }} />
             ))}
           </div>
         )
       ) : !week ? (
-        <div style={{ border: "1px dashed rgba(176,141,87,0.18)", borderRadius: 10, padding: "64px 24px", textAlign: "center" }}>
-          <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, letterSpacing: "0.14em", textTransform: "uppercase", color: "rgba(232,220,199,0.28)", margin: 0 }}>
+        <div style={{ border: "1px dashed #E5E3DC", borderRadius: 8, padding: "64px 24px", textAlign: "center" }}>
+          <p style={{ fontFamily: "'DM Mono', monospace", fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase", color: "rgba(19,19,19,0.28)", margin: 0 }}>
             {t("canteen.noMenu")}
           </p>
         </div>
       ) : (
         <>
           {/* Week tabs */}
-          <div style={{ display: "flex", gap: 6, marginBottom: 20 }}>
+          <div style={{ display: "flex", gap: 6, marginBottom: 18 }}>
             {weeks.map((w) => {
               const active = w.key === week.key;
               return (
@@ -262,15 +257,15 @@ export default function CanteenPage() {
                   onClick={() => setActiveWeek(w.key)}
                   style={{
                     padding: "7px 14px",
-                    borderRadius: 6,
-                    background: active ? "rgba(176,141,87,0.12)" : "transparent",
-                    border: `1px solid ${active ? "rgba(176,141,87,0.3)" : "rgba(176,141,87,0.12)"}`,
+                    borderRadius: 4,
+                    background: active ? "rgba(204,43,43,0.07)" : "#FFFFFF",
+                    border: `1px solid ${active ? "rgba(204,43,43,0.25)" : "#E5E3DC"}`,
                     cursor: "pointer",
-                    fontFamily: "'JetBrains Mono', monospace",
+                    fontFamily: "'DM Mono', monospace",
                     fontSize: 9,
-                    letterSpacing: "0.12em",
+                    letterSpacing: "0.10em",
                     textTransform: "uppercase",
-                    color: active ? "#B08D57" : "rgba(232,220,199,0.3)",
+                    color: active ? "#CC2B2B" : "rgba(19,19,19,0.40)",
                     transition: "all 0.15s",
                   }}
                 >
@@ -280,15 +275,14 @@ export default function CanteenPage() {
             })}
           </div>
 
-          {/* Day layout: rows on mobile, 5-column grid on desktop */}
           {isMobile ? (
-            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {week.days.map((day) => (
                 <DayCard key={day.date} day={day} isPending={pending.has(day.date)} onChange={(choice) => changeMeal(day.date, choice)} />
               ))}
             </div>
           ) : (
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 10 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 8 }}>
               {week.days.map((day) => (
                 <DayCard key={day.date} day={day} isPending={pending.has(day.date)} onChange={(choice) => changeMeal(day.date, choice)} />
               ))}
@@ -307,11 +301,11 @@ export default function CanteenPage() {
             left: "50%",
             transform: "translateX(-50%)",
             zIndex: 200,
-            background: "#161208",
-            border: "1px solid rgba(176,141,87,0.28)",
-            borderRadius: 8,
+            background: "#FFFFFF",
+            border: `1px solid ${toast.tone === "success" ? "rgba(22,163,74,0.25)" : "rgba(220,38,38,0.25)"}`,
+            borderRadius: 6,
             padding: "11px 18px",
-            boxShadow: "0 8px 24px rgba(0,0,0,0.5)",
+            boxShadow: "0 8px 24px rgba(0,0,0,0.10)",
             whiteSpace: "nowrap",
             display: "flex",
             alignItems: "center",
@@ -321,10 +315,10 @@ export default function CanteenPage() {
         >
           <span
             style={{
-              fontFamily: "'JetBrains Mono', monospace",
+              fontFamily: "'DM Mono', monospace",
               fontSize: 10,
-              letterSpacing: "0.12em",
-              color: toast.tone === "success" ? "#88c8a0" : "#c88888",
+              letterSpacing: "0.10em",
+              color: toast.tone === "success" ? "#16A34A" : "#DC2626",
             }}
           >
             {toast.message}
@@ -332,7 +326,7 @@ export default function CanteenPage() {
           <button
             type="button"
             onClick={() => setToast(null)}
-            style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(232,220,199,0.4)", padding: 0, fontSize: 12 }}
+            style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(19,19,19,0.35)", padding: 0, fontSize: 12 }}
           >
             ✕
           </button>
@@ -360,18 +354,18 @@ function DayCard({
   return (
     <div
       style={{
-        background: "#161208",
-        border: "1px solid rgba(176,141,87,0.14)",
-        borderRadius: 10,
+        background: "#FFFFFF",
+        border: "1px solid #E5E3DC",
+        borderRadius: 8,
         overflow: "hidden",
       }}
     >
       {/* Card header */}
-      <div style={{ padding: "12px 12px 10px", borderBottom: "1px solid rgba(176,141,87,0.1)" }}>
-        <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase", color: "rgba(232,220,199,0.4)", marginBottom: 2 }}>
+      <div style={{ padding: "10px 12px 8px", borderBottom: "1px solid #E5E3DC" }}>
+        <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 8, letterSpacing: "0.10em", textTransform: "uppercase", color: "rgba(19,19,19,0.35)", marginBottom: 2 }}>
           {dayName}
         </div>
-        <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 20, color: "#E8DCC7", fontWeight: 400, marginBottom: 6 }}>
+        <div style={{ fontFamily: "'Instrument Serif', serif", fontSize: 18, color: "#131313", fontWeight: 400, marginBottom: 6 }}>
           {dateStr}
         </div>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 6 }}>
@@ -379,10 +373,10 @@ function DayCard({
             style={{
               padding: "3px 7px",
               borderRadius: 3,
-              background: signedUp ? "rgba(50,90,60,0.15)" : "rgba(232,220,199,0.04)",
+              background: signedUp ? "rgba(22,163,74,0.08)" : "rgba(0,0,0,0.04)",
             }}
           >
-            <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 7, letterSpacing: "0.1em", color: signedUp ? "#88c8a0" : "rgba(232,220,199,0.32)" }}>
+            <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 7, letterSpacing: "0.08em", color: signedUp ? "#16A34A" : "rgba(19,19,19,0.32)" }}>
               {signedUp ? t("canteen.signedUp", { letter: day.ordered_meal ?? "" }) : t("canteen.notSignedUp")}
             </span>
           </div>
@@ -391,18 +385,18 @@ function DayCard({
               type="button"
               onClick={() => onChange(null)}
               disabled={isPending}
-              onMouseEnter={(e) => { if (!isPending) e.currentTarget.style.color = "#c88888"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.color = "rgba(200,120,120,0.65)"; }}
+              onMouseEnter={(e) => { if (!isPending) e.currentTarget.style.color = "#DC2626"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.color = "rgba(220,80,80,0.65)"; }}
               style={{
                 background: "transparent",
                 border: "none",
                 padding: "2px 4px",
                 cursor: isPending ? "wait" : "pointer",
-                fontFamily: "'JetBrains Mono', monospace",
+                fontFamily: "'DM Mono', monospace",
                 fontSize: 7,
-                letterSpacing: "0.1em",
+                letterSpacing: "0.08em",
                 textTransform: "uppercase",
-                color: "rgba(200,120,120,0.65)",
+                color: "rgba(220,80,80,0.65)",
                 transition: "color 0.15s",
                 whiteSpace: "nowrap",
               }}
@@ -416,18 +410,18 @@ function DayCard({
       {/* Body */}
       {!day.open ? (
         <div style={{ padding: "18px 12px", textAlign: "center" }}>
-          <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase", color: "rgba(232,220,199,0.18)" }}>
+          <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 9, letterSpacing: "0.10em", textTransform: "uppercase", color: "rgba(19,19,19,0.20)" }}>
             {t("canteen.closed")}
           </div>
         </div>
       ) : day.options.length === 0 ? (
         <div style={{ padding: "18px 12px", textAlign: "center" }}>
-          <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase", color: "rgba(232,220,199,0.18)" }}>
+          <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 9, letterSpacing: "0.10em", textTransform: "uppercase", color: "rgba(19,19,19,0.20)" }}>
             {t("canteen.menuNotPublished")}
           </div>
         </div>
       ) : (
-        <div style={{ padding: 10, display: "flex", flexDirection: "column", gap: 6 }}>
+        <div style={{ padding: 8, display: "flex", flexDirection: "column", gap: 5 }}>
           {day.options.map((opt) => (
             <MealOption
               key={opt.letter}
@@ -464,9 +458,9 @@ function MealOption({
       disabled={disabled}
       style={{
         padding: "9px 10px",
-        borderRadius: 6,
-        border: `1px solid ${selected ? "rgba(176,141,87,0.4)" : "rgba(176,141,87,0.12)"}`,
-        background: selected ? "rgba(176,141,87,0.12)" : "transparent",
+        borderRadius: 5,
+        border: `1px solid ${selected ? "rgba(204,43,43,0.28)" : "#E5E3DC"}`,
+        background: selected ? "rgba(204,43,43,0.06)" : "transparent",
         cursor: disabled ? "wait" : "pointer",
         opacity: disabled ? 0.7 : 1,
         textAlign: "left",
@@ -474,14 +468,14 @@ function MealOption({
         width: "100%",
       }}
     >
-      <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 8, letterSpacing: "0.12em", textTransform: "uppercase", color: "#B08D57", marginBottom: 3 }}>
+      <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 8, letterSpacing: "0.10em", textTransform: "uppercase", color: "#CC2B2B", marginBottom: 3 }}>
         {t("canteen.menu", { letter: opt.letter })}
       </div>
-      <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 11, fontWeight: 500, color: "#E8DCC7", lineHeight: 1.3, marginBottom: 2 }}>
+      <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 11, fontWeight: 500, color: "#131313", lineHeight: 1.3, marginBottom: 2 }}>
         {opt.name ?? "—"}
       </div>
       {details && (
-        <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 7, color: "rgba(232,220,199,0.25)", lineHeight: 1.4 }}>
+        <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 7, color: "rgba(19,19,19,0.28)", lineHeight: 1.4 }}>
           {details}
         </div>
       )}
