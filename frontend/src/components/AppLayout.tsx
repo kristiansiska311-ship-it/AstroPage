@@ -276,8 +276,38 @@ function SidebarContent({ onNavClick }: { onNavClick?: () => void }) {
   );
 }
 
+function DemoBanner() {
+  return (
+    <div
+      style={{
+        background: "rgba(204,43,43,0.07)",
+        borderBottom: "1px solid rgba(204,43,43,0.18)",
+        padding: "7px 20px",
+        display: "flex",
+        alignItems: "center",
+        gap: 8,
+        flexShrink: 0,
+      }}
+    >
+      <div style={{ width: 5, height: 5, borderRadius: "50%", background: "#CC2B2B", flexShrink: 0 }} />
+      <span
+        style={{
+          fontFamily: "'DM Mono', monospace",
+          fontSize: 9,
+          letterSpacing: "0.12em",
+          textTransform: "uppercase",
+          color: "#CC2B2B",
+        }}
+      >
+        Demo mode — sample data only, changes are not saved
+      </span>
+    </div>
+  );
+}
+
 export default function AppLayout() {
   const isMobile = useIsMobile();
+  const { isDemo } = useAuth();
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   function openDrawer() { setDrawerOpen(true); }
@@ -331,8 +361,9 @@ export default function AppLayout() {
         </header>
 
         {/* Main content */}
-        <main style={{ flex: 1, minWidth: 0, overflowY: "auto", background: "#F2F0E8" }}>
-          <Outlet />
+        <main style={{ flex: 1, minWidth: 0, overflowY: "auto", background: "#F2F0E8", display: "flex", flexDirection: "column" }}>
+          {isDemo && <DemoBanner />}
+          <div style={{ flex: 1 }}><Outlet /></div>
         </main>
 
         {/* Off-canvas drawer backdrop */}
@@ -420,8 +451,9 @@ export default function AppLayout() {
       </aside>
 
       {/* Main */}
-      <main style={{ flex: 1, minWidth: 0, overflowY: "auto", background: "#F2F0E8" }}>
-        <Outlet />
+      <main style={{ flex: 1, minWidth: 0, overflowY: "auto", background: "#F2F0E8", display: "flex", flexDirection: "column" }}>
+        {isDemo && <DemoBanner />}
+        <div style={{ flex: 1 }}><Outlet /></div>
       </main>
     </div>
   );

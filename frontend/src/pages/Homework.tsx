@@ -622,27 +622,7 @@ function DetailDrawer({ homework, ai, doneBusy, onToggleDone, onRunAi, onEditDra
           <div style={{ height: 1, background: "rgba(255,255,255,0.07)", marginBottom: 18 }} />
 
           {/* AI section */}
-          {ai.phase === "idle" && (
-            <div
-              style={{
-                padding: "12px 14px",
-                background: "rgba(255,255,255,0.03)",
-                border: "1px solid rgba(255,255,255,0.07)",
-                borderRadius: 6,
-                display: "flex",
-                alignItems: "center",
-                gap: 10,
-              }}
-            >
-              <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
-                <circle cx="8" cy="8" r="3" stroke="rgba(204,43,43,0.45)" strokeWidth="1.2" />
-                <path d="M8 1v1.5M8 13.5V15M15 8h-1.5M2.5 8H1M12.6 3.4l-1.1 1.1M4.5 11.5l-1.1 1.1M12.6 12.6l-1.1-1.1M4.5 4.5L3.4 3.4" stroke="rgba(204,43,43,0.45)" strokeWidth="1.2" strokeLinecap="round" />
-              </svg>
-              <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase", color: "rgba(255,255,255,0.25)" }}>
-                {t("homework.aiUnavailable")}
-              </span>
-            </div>
-          )}
+          {ai.phase === "idle" && <AiButton onClick={onRunAi} />}
 
           {ai.phase === "loading" && (
             <div

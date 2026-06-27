@@ -1,10 +1,12 @@
 # AstroPage
 
-A modern alternative client portal for EduPage with an integrated AI homework assistant.
+A modern alternative portal for EduPage — the school management platform used by thousands of schools across Central and Eastern Europe. AstroPage replaces EduPage's rigid default UI with a fast, clean React dashboard and adds an AI homework assistant powered by Gemini.
 
-## What it is
+**No EduPage account?** Click "Try demo" on the login screen to explore the full UI with sample data — no credentials required.
 
-EduPage is a widely-used school management platform with a rigid default UI. AstroPage replaces that UI with a fast, responsive React dashboard and adds an AI layer that can draft homework solutions for student review — the student always reviews and approves before anything is submitted.
+## What it does
+
+EduPage is a widely-used school management platform with a rigid default UI. AstroPage replaces that UI with a fast, responsive React dashboard and adds an AI layer that can draft homework solutions for student review — the student always reviews and approves before anything is submitted. Nothing is auto-submitted.
 
 ## Stack
 
@@ -147,24 +149,32 @@ make clean          # remove build artifacts
 
 ## AI Declaration
 
-This project was built with significant assistance from **Claude Code** (Anthropic's AI coding CLI). But speed was never the goal — I deliberately chose to understand every part of the system rather than delegate design decisions to AI. Claude was a tool for getting code written faster; the learning and the architecture were mine.
+I built this project using **Claude Code** (Anthropic's AI coding CLI) as a development tool. The distinction I care about: Claude wrote code I understood and directed; it did not make product or architecture decisions for me.
 
-**What I did:**
+### What I personally did
 
-- **EduPage API exploration** — when a page wasn't returning the right data or wasn't working at all, I wrote PoC scripts to test what the `edupage-api` library actually returns, what fields exist, and where the quirks are. These weren't generated — they were debugging tools I built to understand a system I didn't control.
-- **Architecture decisions** — the core constraints (no password storage, per-subdomain session isolation, Fernet-encrypted sessions at rest, the human-in-the-loop AI draft flow) were mine. I set the requirements; Claude proposed implementation patterns.
-- **System design learning** — I intentionally took time to understand why decisions were made, not just accept Claude's first suggestion. Things like async session handling, JWT + HttpOnly cookie auth, and the caching strategy were studied and reasoned through, not just copy-pasted.
-- **Debugging and deployment** — I personally debugged the Docker CI/CD pipeline: health-check failures, the self-hosted GitHub Actions runner, and container networking issues.
+**EduPage reverse-engineering.** The `edupage-api` Python library has incomplete docs and inconsistent field names. I wrote throwaway PoC scripts in `backend/scripts/` to probe what each library call actually returns — what fields come back, what's null, when it throws. That ground-level understanding shaped every endpoint I designed.
 
-**What Claude Code handled:**
+**Architecture.** The core constraints are mine:
+- No password storage: the backend authenticates against EduPage, Fernet-encrypts the session cookie, and discards the password immediately. I chose this because I don't want to be an identity provider.
+- Per-subdomain session isolation: each school is a separate EduPage tenant, and sessions cannot bleed across.
+- Human-in-the-loop AI: the draft is always rendered editable. The student owns the final submission. This is a product decision, not a safety filter.
+- Async throughout: EduPage fetches are network I/O; blocking calls are wrapped with `asyncio.to_thread`.
 
-- Boilerplate for FastAPI endpoints, Pydantic schemas, and SQLModel models once the design was settled.
-- React components, Tailwind styling, and hook patterns that I reviewed and refined.
-- CI/CD YAML, Makefile targets, and test stubs.
-- Git commits and pushes — I used Claude Code to stage and write commit messages throughout the project because doing it manually for every incremental change is tedious and error-prone.
-- Documentation — this README and the `CLAUDE.md` project instructions were written and maintained by Claude based on what I described and built.
+**Debugging and deployment.** I debugged the Docker CI/CD pipeline myself: the health-check failures (switched from `curl` to Python's `urllib` because `curl` wasn't in the image), the self-hosted GitHub Actions runner setup, and container networking. The runner polls GitHub outbound — there are no inbound firewall rules to open.
 
-**In-app AI feature:** The homework draft assistant uses **Google Gemini** (`gemini-2.5-flash`) at runtime — this is separate from the development tooling described above.
+**Frontend caching strategy.** The `useCachedResource` hook seeds state synchronously from an in-memory session cache, refetches in the background when TTL expires, and refreshes on tab focus. On login, `prefetchAll()` warms every page's cache sequentially so the first navigation after login is instant. I designed this behaviour; Claude implemented the hook.
+
+### What Claude Code handled
+
+- FastAPI endpoint boilerplate, Pydantic schemas, SQLModel models — once the shape was decided.
+- React component markup and Tailwind/inline-style patterns, which I reviewed and iterated on.
+- CI/CD YAML, Makefile targets, test stubs.
+- Git commits and README text.
+
+### In-app AI feature
+
+The homework draft assistant uses **Google Gemini** (`gemini-2.5-flash`) at runtime. This is a separate tool from Claude Code, which I used for development. The backend always appends a study-assistant constraint: Gemini must draft *and explain*, never just produce a bare answer.
 
 ---
 

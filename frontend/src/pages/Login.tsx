@@ -6,7 +6,7 @@ import LanguageSwitcher from "../components/LanguageSwitcher";
 import type { ApiError } from "../api/client";
 
 export default function Login() {
-  const { login } = useAuth();
+  const { login, loginAsDemo } = useAuth();
   const { t } = useT();
   const isMobile = useIsMobile();
   const [subdomain, setSubdomain] = useState("");
@@ -194,6 +194,53 @@ export default function Login() {
               {submitting ? t("login.submitting") : t("login.submit")}
             </button>
           </form>
+
+          {/* Demo access — no EduPage account needed */}
+          <div style={{ display: "flex", alignItems: "center", gap: 10, margin: "18px 0 0" }}>
+            <div style={{ flex: 1, height: 1, background: "#E5E3DC" }} />
+            <span
+              style={{
+                fontFamily: "'DM Mono', monospace",
+                fontSize: 8,
+                letterSpacing: "0.12em",
+                textTransform: "uppercase",
+                color: "rgba(19,19,19,0.28)",
+              }}
+            >
+              or
+            </span>
+            <div style={{ flex: 1, height: 1, background: "#E5E3DC" }} />
+          </div>
+          <button
+            type="button"
+            onClick={loginAsDemo}
+            style={{
+              width: "100%",
+              marginTop: 12,
+              background: "transparent",
+              color: "rgba(19,19,19,0.60)",
+              fontFamily: "'DM Mono', monospace",
+              fontSize: 10,
+              letterSpacing: "0.14em",
+              textTransform: "uppercase",
+              padding: 12,
+              textAlign: "center",
+              borderRadius: 4,
+              border: "1px solid #E5E3DC",
+              cursor: "pointer",
+              transition: "border-color 0.2s, color 0.2s",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = "rgba(204,43,43,0.40)";
+              e.currentTarget.style.color = "#CC2B2B";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = "#E5E3DC";
+              e.currentTarget.style.color = "rgba(19,19,19,0.60)";
+            }}
+          >
+            Try demo — no account needed
+          </button>
 
           <div
             style={{
