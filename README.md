@@ -1,14 +1,18 @@
 # AstroPage
 
-A modern alternative portal for EduPage — the school management platform used by thousands of schools across Central and Eastern Europe. AstroPage replaces EduPage's rigid default UI with a fast, clean React dashboard and adds an AI homework assistant powered by Google Gemini.
+Astropage is a edupage based platform that is not here to replace edupage, but to enrich students of features that are not natively supported by edupage. 
 
 ---
+## Motivation
+
+Astropage started as a final school project for this year. Many classmates did really simple web apps but I love to make things harder and learn more. I had this idea of edupage automatic homework maker since I discovered that there is EdupageAPI. While I was making this project ideas for new features that would make this even better started popping in my head so I started implementing them. In the end, teacher was really impressed by this project. 
+
 
 ## Trying the app
 
 ### Option A — Demo mode (no account needed)
-
-You do not need an EduPage account to explore the app. On the login screen, click **"Try demo — no account needed"**. You will be taken straight into a fully functional dashboard loaded with realistic sample data: assignments, a timetable, grades, canteen meals, and a working AI homework draft generator.
+ 
+You do not need an EduPage account to explore the app. On the login screen, click **"Try demo — no account needed"**. You will be taken straight into a fully functional dashboard loaded with realistic sample data: assignments, a timetable, grades, canteen meals, and a working AI homework draft generator. 
 
 ![Login screen with demo button](docs/screenshots/login-page.png)
 
@@ -16,22 +20,12 @@ Everything works in demo mode — filters, the what-if grade simulator, meal ord
 
 ### Option B — Real EduPage login
 
-If you have an EduPage school account, you can log in with your actual data.
+If you have an EduPage school account, you can log in with your actual data. AstroPage is not storing any of it. It uses edupageAPI to get JWT session cookie from edupage. 
 
 **What you need:**
 - Your school's EduPage subdomain (e.g. `spsezoska` — the part before `.edupage.org`)
-- Your EduPage username (usually `firstname.lastname`)
+- Your EduPage username (usually `FirstnameLastname`)
 - Your EduPage password
-
-**Steps:**
-1. Open the app.
-2. Enter your subdomain in the **School** field.
-3. Enter your username and password.
-4. Click **Sign in**.
-
-The backend authenticates directly against your school's EduPage instance. Your password is never stored anywhere — not in memory beyond a single request, not in the database, not in logs. After authentication, an encrypted session token is stored server-side and a JWT is issued in an `HttpOnly` cookie. Your password is discarded immediately.
-
-> **Note:** You can only log in if your school uses EduPage. If your school subdomain does not exist or your credentials are wrong, you will see an error message.
 
 ---
 
@@ -100,27 +94,9 @@ Meal ordering for your school canteen. Features:
 - **Auto-order** — set a preferred menu letter and a number of days; the backend signs you up for all upcoming unordered days in one request.
 - Changes are confirmed by reading the state back from EduPage — a 200 OK is not trusted blindly.
 
-### Settings
 
-Lets you customise how the AI homework assistant behaves for your account:
-- **Custom system prompt** — prepended to every Gemini request so the model knows your preferences (language, style, depth).
-- **Toggles** — step-by-step mode, simple language, citation requirements.
 
----
 
-## Stack
-
-| Layer | Tech |
-|---|---|
-| Frontend | React 19 + Vite + TypeScript + Tailwind CSS |
-| Backend | FastAPI (Python 3.11+, async throughout) |
-| EduPage integration | `edupage-api` Python module |
-| AI assistant | Google Gemini (`gemini-2.5-flash`) |
-| Database | Postgres via async SQLAlchemy + SQLModel |
-| Auth | JWT in `HttpOnly` cookie + Fernet-encrypted server-side session |
-| i18n | Custom React context — English (default) + Slovak |
-
----
 
 ## Architecture
 
@@ -142,20 +118,7 @@ Every data page uses `useCachedResource` — a hook that:
 
 On login, `prefetchAll()` fires in the background and warms every page's cache sequentially (dashboard first), so the first tab switch after login is typically instant.
 
-### AI homework pipeline
 
-1. Student opens an assignment and clicks "Draft with AI".
-2. Backend fetches the full assignment text and up to 5 attachments (PDFs, images) from EduPage.
-3. All content is sent to Gemini as inline parts (text/PDF/image, ≤ 20 MB each), along with the student's custom system prompt from Settings.
-4. A `STUDY_ASSISTANT_CONSTRAINT` is always appended: the model must draft *and explain*, never produce a bare answer.
-5. The draft is returned as editable text. Nothing is submitted automatically.
-
-### Internationalisation
-
-- Language is selected on the login screen and persisted in `localStorage`.
-- All UI strings live in `frontend/src/i18n/translations.ts` as a flat EN/SK catalogue.
-- Date and number formatting uses `Intl` with `en-GB` or `sk-SK` locale.
-- `tn(key, n)` handles plural forms; Slovak uses a 3-form system (one/few/other).
 
 ---
 
@@ -191,98 +154,19 @@ AstroPage/
 
 ---
 
-## Getting started
-
-**Prerequisites:** Python 3.11+, [`uv`](https://github.com/astral-sh/uv), Node.js 20+
-
-```bash
-# Install all dependencies
-make install
-
-# Copy and fill in environment variables
-cp backend/.env.example backend/.env
-# Edit backend/.env — at minimum set DATABASE_URL
-```
-
-Start Postgres (the backend requires it for session storage):
-
-```bash
-docker compose up -d db
-```
-
-Then run backend and frontend in two separate terminals:
-
-```bash
-make dev-backend    # FastAPI on http://localhost:8000
-make dev-frontend   # Vite on http://localhost:5173 (proxies /api → :8000)
-```
-
-Open `http://localhost:5173`. Use the **"Try demo"** button to explore without any EduPage account, or log in with your real credentials.
-
-API docs (interactive): `http://localhost:8000/docs`
-
----
-
-## Environment variables
-
-See `backend/.env.example` for all variables and their defaults.
-
-| Variable | Required | Description |
-|---|---|---|
-| `APP_ENV` | no | `development` (default) or `production` |
-| `SECRET_KEY` | prod | HMAC signing key for tokens |
-| `DATABASE_URL` | yes | Async Postgres URL; defaults match the `db` compose service |
-| `JWT_SECRET` | prod | Signs session JWTs issued to the browser |
-| `FERNET_KEY` | prod | Encrypts EduPage session cookies at rest; auto-derived from `SECRET_KEY` if unset |
-| `FRONTEND_ORIGIN` | no | CORS-allowed origin (default `http://localhost:5173`) |
-| `GEMINI_API_KEY` | AI only | Required for live AI homework drafts; demo mode does not use it |
-
----
-
-## Docker
-
-```bash
-make docker    # builds and starts db + backend + frontend via Docker Compose
-```
-
----
-
-## Deployment
-
-CD is via a self-hosted GitHub Actions runner on a home server. Pushing to `main` triggers the runner to sync the persistent clone and run `docker compose up -d --build`. There is no container registry and no inbound firewall rules — the runner polls GitHub outbound. See `.github/workflows/cd.yml` for details.
-
----
-
-## Commands
-
-```bash
-make install        # install backend + frontend deps
-make dev-backend    # start FastAPI with live reload
-make dev-frontend   # start Vite dev server
-make test           # run backend pytest suite
-make lint           # ruff + eslint
-make format         # ruff format
-make docker         # full stack via Docker Compose
-make clean          # remove build artifacts
-```
-
----
-
 ## AI Declaration
 
-I built this project using **Claude Code** (Anthropic's AI coding CLI) as a development tool. The distinction I care about: Claude wrote code I understood and directed; it did not make product or architecture decisions for me.
+This project was dependent on using AI. I am new to claude code and other ai tools so I was trying to combine it with my own skills. Claude did the heavy lifting while I was debugging, creating logic, redesigning frontend, setuping CD pipeline and prompting claude. 
 
 ### What I personally did
 
-**EduPage reverse-engineering.** The `edupage-api` Python library has incomplete docs and inconsistent field names. I wrote throwaway PoC scripts in `backend/scripts/` to probe what each library call actually returns — what fields come back, what's null, when it throws. That ground-level understanding shaped every endpoint I designed.
+**EduPage reverse-engineering.** The `edupage-api` Python library has incomplete docs and inconsistent field names. I wrote throwaway PoC scripts in `backend/scripts/` to probe what each library call actually returns — what fields come back, what's null, when it throws. That ground-level understanding shaped every endpoint I designed. 
 
 **Architecture decisions.** The core constraints are mine:
-- No password storage: the backend authenticates against EduPage, Fernet-encrypts the session cookie, and discards the password immediately. I chose this because I don't want to be an identity provider.
-- Per-subdomain session isolation: each school is a separate EduPage tenant; sessions cannot bleed across.
-- Human-in-the-loop AI: the draft is always rendered editable. The student owns the final submission. This is a product decision, not a safety filter.
-- Async throughout: EduPage fetches are network I/O; blocking calls are wrapped with `asyncio.to_thread`.
+- No password storage: the backend authenticates against EduPage, Fernet-encrypts the session cookie, and discards the password immediately. I chose this because I have seen it as opurtunity to grow in my engeneering skills and also I could put this in my resume.
+- Async throughout: EduPage fetches are network I/O; blocking calls are wrapped with `asyncio.to_thread`. Working with async is really desired skill in todays job market so I wanted to design it hands on.
 
-**Debugging and deployment.** I debugged the Docker CI/CD pipeline myself: the health-check failures (switched from `curl` to Python's `urllib` because `curl` wasn't in the image), the self-hosted GitHub Actions runner setup, and container networking. The runner polls GitHub outbound — no inbound ports needed.
+**Debugging and deployment.** I debugged the Docker CI/CD pipeline myself: the health-check failures (switched from `curl` to Python's `urllib` because `curl` wasn't in the image), the self-hosted GitHub Actions runner setup on my homelab rpi server, and container networking. The runner polls GitHub outbound — no inbound ports needed.
 
 **Frontend caching strategy.** The `useCachedResource` hook design (synchronous seed from cache, background refetch, tab-focus refresh, prefetch on login) was my design; Claude implemented the hook from the spec.
 
@@ -297,15 +181,10 @@ I built this project using **Claude Code** (Anthropic's AI coding CLI) as a deve
 
 ### In-app AI feature
 
-The homework draft assistant uses **Google Gemini** (`gemini-2.5-flash`) at runtime. This is a separate product from Claude Code (which is a development CLI I used to write code faster). The backend always appends a study-assistant constraint: Gemini must draft *and explain*, never just produce a bare answer. The demo mode shows this flow with a local mock so you can see it work without a Gemini API key.
+The homework draft assistant uses **Google Gemini** at runtime. The demo mode shows this flow with a local mock so you can see it work without a Gemini API key. I kept this feature turned off on the official page too because I am scared of waking up to 20k bill for ai if I would have a security flaw in my app. 
 
 ---
 
-## Core constraints
+### Word from me
 
-These apply everywhere in this codebase and must never be violated:
-
-- **Never store user passwords** — not in memory beyond a request, not in the DB, not in logs.
-- **Never auto-submit to EduPage** — the human-in-the-loop review step is a product constraint, not a safety filter.
-- **AI response is always a draft** — rendered editable in the UI; the student owns the final submission.
-- **Treat `edupage-api` as a flaky scraper** — wrap every call in `asyncio.to_thread`, map exceptions to clean error responses, and verify every write by reading it back (EduPage returns 200 for no-ops).
+This project took way longer than I wanted it to take. I had manny issues and unexpected behaivour. Final weeks I was really unmotivated by having to rework almost 50% of the project but I managed to finish it (I belive). I am proud of this and I am putting it to my resume. 
